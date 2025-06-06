@@ -60,7 +60,7 @@ def gerar_resposta(memoria, prompt):
             headers={
                 "Authorization": f"Bearer {OPENROUTER_KEY}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://santchat.streamlit.app/",  # Troque pela URL do seu app
+                "HTTP-Referer": "https://santchat.streamlit.app/",
                 "X-Title": "SantChat",
             },
             json={
@@ -71,7 +71,14 @@ def gerar_resposta(memoria, prompt):
             },
         )
 
+        if response.status_code != 200:
+            return f"Erro HTTP {response.status_code}: {response.text}"
+
         data = response.json()
+
+        if "choices" not in data or not data["choices"]:
+            return f"Erro na API OpenRouter: resposta inválida. Conteúdo bruto:\n{json.dumps(data, indent=2, ensure_ascii=False)}"
+
         resposta = data["choices"][0]["message"]["content"].strip()
 
     except Exception as e:
