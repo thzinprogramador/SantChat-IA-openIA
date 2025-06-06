@@ -60,6 +60,12 @@ def gerar_resposta(memoria, prompt):
             max_tokens=500,
             temperature=0.7,
         )
+
+        # Se o response for um objeto OpenAI, você acessa diretamente.
+        # Mas como está retornando string, você precisa converter:
+        if isinstance(response, str):
+            response = json.loads(response)
+
         resposta = response['choices'][0]['message']['content'].strip()
     except Exception as e:
         resposta = f"Erro na API OpenAI: {str(e)}"
