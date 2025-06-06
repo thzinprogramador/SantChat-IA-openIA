@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 import openai
 import socket
+import requests
 
 # Configurações de segurança e chave API via st.secrets
 OPENROUTER_KEY = st.secrets.get("OPENROUTER_KEY", "")
@@ -54,23 +55,29 @@ def gerar_resposta(memoria, prompt):
     mensagens.append({"role": "user", "content": prompt})
 
     try:
-        response = openai.chat.completions.create(
-            model="nous-hermes-2-mixtral",
-            messages=mensagens,
-            max_tokens=500,
-            temperature=0.7,
-        )
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_KEY}",
+            "Content-Type": "application/json"
+        }
 
-        # Verifica se é string (quando vem como texto JSON do OpenRouter)
-        if isinstance(response, str):
-            if not response.strip():
-                raise ValueError("Resposta da API está vazia.")
-                st.write("🛠️ Resposta bruta da API:", response)
-            response = json.loads(response)
+        payload = {
+            "model": "nous-hermes-2-mixtral",
+            "messages": mensagens,
+            "max_tokens": 500,
+            "temperature": 0.7
+        }
 
-        resposta = response['choices'][0]['message']['content'].strip()
+        response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+
+        if response.status_code != 200:
+            raise ValueError(f"Erro HTTP {response.status_code}: {response.text}")
+
+        resultado = response.json()
+        resposta = resultado["choices"][0]["message"]["content"].strip()
+
     except Exception as e:
-        resposta = f"Erro na API OpenAI: {str(e)}"
+        resposta = f"Erro na API OpenRouter: {str(e)}"
+
     return resposta
 
 def main():
