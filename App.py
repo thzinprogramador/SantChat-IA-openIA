@@ -65,6 +65,7 @@ def gerar_resposta(memoria, prompt):
         if isinstance(response, str):
             if not response.strip():
                 raise ValueError("Resposta da API está vazia.")
+                st.write("🛠️ Resposta bruta da API:", response)
             response = json.loads(response)
 
         resposta = response['choices'][0]['message']['content'].strip()
