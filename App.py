@@ -55,12 +55,12 @@ def gerar_resposta(memoria, prompt):
 
     try:
         response = openai.chat.completions.create(
-            model="nous-hermes-2-mixtral",  # <- Modelo potente e gratuito
+            model="nous-hermes-2-mixtral",
             messages=mensagens,
             max_tokens=500,
             temperature=0.7,
         )
-        resposta = response.choices[0].message.content.strip()
+        resposta = response['choices'][0]['message']['content'].strip()
     except Exception as e:
         resposta = f"Erro na API OpenAI: {str(e)}"
     return resposta
@@ -116,7 +116,7 @@ def main():
 
     for chat in st.session_state.historico:
         st.markdown(f"**Você:** {chat['user']}")
-        st.markdown(f"**IA:** {chat['bot']}")
+        st.markdown(f"**SantChat:** {chat['bot']}")
 
 if __name__ == "__main__":
     main()
