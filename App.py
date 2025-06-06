@@ -61,7 +61,7 @@ def gerar_resposta(memoria, prompt):
         }
 
         payload = {
-            "model": "nous-hermes-2-mixtral",
+            model="nousresearch/nous-hermes-2-mixtral",
             "messages": mensagens,
             "max_tokens": 500,
             "temperature": 0.7
