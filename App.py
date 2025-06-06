@@ -61,9 +61,10 @@ def gerar_resposta(memoria, prompt):
             temperature=0.7,
         )
 
-        # Se o response for um objeto OpenAI, você acessa diretamente.
-        # Mas como está retornando string, você precisa converter:
+        # Verifica se é string (quando vem como texto JSON do OpenRouter)
         if isinstance(response, str):
+            if not response.strip():
+                raise ValueError("Resposta da API está vazia.")
             response = json.loads(response)
 
         resposta = response['choices'][0]['message']['content'].strip()
