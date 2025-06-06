@@ -55,25 +55,24 @@ def gerar_resposta(memoria, prompt):
     mensagens.append({"role": "user", "content": prompt})
 
     try:
-        headers = {
-            "Authorization": f"Bearer {OPENROUTER_KEY}",
-            "Content-Type": "application/json"
-        }
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_KEY}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://santchat.streamlit.app/",  # Troque pela URL do seu app
+                "X-Title": "SantChat",
+            },
+            json={
+                "model": "nousresearch/nous-hermes-2-mixtral",
+                "messages": mensagens,
+                "max_tokens": 500,
+                "temperature": 0.7,
+            },
+        )
 
-        payload = {
-            model="nousresearch/nous-hermes-2-mixtral",
-            "messages": mensagens,
-            "max_tokens": 500,
-            "temperature": 0.7
-        }
-
-        response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-
-        if response.status_code != 200:
-            raise ValueError(f"Erro HTTP {response.status_code}: {response.text}")
-
-        resultado = response.json()
-        resposta = resultado["choices"][0]["message"]["content"].strip()
+        data = response.json()
+        resposta = data["choices"][0]["message"]["content"].strip()
 
     except Exception as e:
         resposta = f"Erro na API OpenRouter: {str(e)}"
