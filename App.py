@@ -43,7 +43,7 @@ def obter_ip():
     # Como alternativa temporária, pode usar o hostname ou ip local.
     # Aqui usamos localhost porque IP real do cliente não é acessível.
     try:
-        ip = st.experimental_get_query_params().get("ip", ["localhost"])[0]
+        ip = st.query_params.get("ip", ["localhost"])[0]
     except:
         ip = "localhost"
     return ip
