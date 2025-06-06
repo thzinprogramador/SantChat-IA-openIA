@@ -64,7 +64,7 @@ def gerar_resposta(memoria, prompt):
                 "X-Title": "SantChat",
             },
             json={
-                "model": "nousresearch/nous-hermes-2-mixtral",
+                "model": "nousresearch/deephermes-3-mistral-24b-preview:free",
                 "messages": mensagens,
                 "max_tokens": 500,
                 "temperature": 0.7,
