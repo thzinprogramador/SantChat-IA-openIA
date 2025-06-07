@@ -158,10 +158,13 @@ def main():
 
         # 🧠 Comando para atualizar memória da IA
     if entrada_usuario.lower().startswith("/sntevksi"):
+    # Extrai o conteúdo da mensagem após o comando
     novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
+    
     if novo_conhecimento:
+        # Adiciona o novo conhecimento à memória e salva no Firebase
         memoria.append(novo_conhecimento)
-        salvar_memoria(memoria)  # Salva no Firebase
+        salvar_memoria(memoria)
         resposta = "Memória atualizada com sucesso!"
     else:
         resposta = "Por favor, envie uma frase para aprender após o comando /sntevksi."
