@@ -51,12 +51,13 @@ def salvar_memoria(memoria):
 
 # 📝 Salva logs da conversa em arquivos separados por IP
 def salvar_log(ip, conteudo):
-    pasta_ip = os.path.join(LOGS_DIR, ip.replace(":", "_"))
-    os.makedirs(pasta_ip, exist_ok=True)
-    agora = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    arquivo_log = os.path.join(pasta_ip, f"{agora}.txt")
-    with open(arquivo_log, "a", encoding="utf-8") as f:
-        f.write(conteudo + "\n")
+    try:
+        agora = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        ref = db.reference(f"logs/{ip.replace(':', '_')}")
+        ref.update({agora: conteudo})
+    except Exception as e:
+        print(f"Erro ao salvar log no Firebase: {e}")
+
 
 # 🌐 Obtém o IP do usuário (via query string ou local)
 def obter_ip():
