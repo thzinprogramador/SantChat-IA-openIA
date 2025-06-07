@@ -14,7 +14,7 @@ from firebase_admin import credentials, db
 if not firebase_admin._apps:
     cred = credentials.Certificate("firebase_key.json")  # Arquivo gerado no Firebase Console
     firebase_admin.initialize_app(cred, {
-        "databaseURL": "https://SEU_PROJETO.firebaseio.com"  # ⬅️ Substitua pela sua URL real do Firebase Realtime Database
+        "databaseURL": "https://santchat-ia-default-rtdb.firebaseio.com"  # ⬅️ Substitua pela sua URL do Firebase Realtime Database
     })
 
 # 📦 Configurações de segurança e chave da API OpenRouter
@@ -69,7 +69,7 @@ def obter_ip():
 
 # 🧠 Gera resposta com base no histórico de memória e mensagem do usuário
 def gerar_resposta(memoria, prompt):
-    mensagens = [{"role": "system", "content": "Você é uma IA superinteligente e direta."}]
+    mensagens = [{"role": "system", "content": "Você é o SantChat, um assistente virtual inteligente do banco Santander. Sua função é responder perguntas sobre atendimento e dúvidas recorrentes no geral. Sempre responda de forma clara, profissional e empática. Evite repetir a pergunta e não invente informações. Seja preciso."}]
     
     if memoria:
         memoria_texto = "\n".join(memoria)
