@@ -36,7 +36,7 @@ def carregar_memoria():
         memoria = ref.get()
         if memoria is None:
             return []
-        return memoria
+        return memoria  # Deve retornar lista
     except Exception as e:
         print(f"Erro ao carregar memória do Firebase: {e}")
         return []
@@ -45,7 +45,7 @@ def carregar_memoria():
 def salvar_memoria(memoria):
     try:
         ref = db.reference("memoria_global")
-        ref.set(memoria)
+        ref.set(memoria)  # Espera uma lista, como: ["item1", "item2"]
     except Exception as e:
         print(f"Erro ao salvar memória no Firebase: {e}")
 
@@ -158,25 +158,26 @@ def main():
 
         # 🧠 Comando para atualizar memória da IA
         if entrada_usuario.lower().startswith("/sntevksi"):
-            novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
-            if novo_conhecimento:
-                memoria.append(novo_conhecimento)
-                salvar_memoria(memoria)
-                resposta = "Memória atualizada com sucesso!"
-            else:
-                resposta = "Por favor, envie uma frase para aprender após o comando /sntevksi."
-        else:
-            resposta = gerar_resposta(memoria, entrada_usuario)
+    novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
+    if novo_conhecimento:
+        memoria.append(novo_conhecimento)
+        salvar_memoria(memoria)  # Salva no Firebase
+        resposta = "Memória atualizada com sucesso!"
+    else:
+        resposta = "Por favor, envie uma frase para aprender após o comando /sntevksi."
 
-        # 📦 Atualiza histórico e salva log da resposta
-        st.session_state.historico.append({"user": entrada_usuario, "bot": resposta})
-        salvar_log(ip_usuario, f"Bot: {resposta}")
+    else:
+        resposta = gerar_resposta(memoria, entrada_usuario)
 
-        # 💬 Mostra nova mensagem em tempo real
-        with st.chat_message("user"):
-            st.markdown(entrada_usuario)
-        with st.chat_message("assistant"):
-            st.markdown(resposta)
+    # 📦 Atualiza histórico e salva log da resposta
+    st.session_state.historico.append({"user": entrada_usuario, "bot": resposta})
+    salvar_log(ip_usuario, f"Bot: {resposta}")
+
+    # 💬 Mostra nova mensagem em tempo real
+    with st.chat_message("user"):
+        st.markdown(entrada_usuario)
+    with st.chat_message("assistant"):
+        st.markdown(resposta)
 
 # 🟢 Executa app
 if __name__ == "__main__":
