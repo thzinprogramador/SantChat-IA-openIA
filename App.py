@@ -5,32 +5,31 @@ from datetime import datetime
 import openai
 import socket
 import requests
-# 🔧 Firebase: Inicialização obrigatória da conexão
+
+# 🔧 Firebase: Importa bibliotecas necessárias
 import firebase_admin
 from firebase_admin import credentials, db
 
-# Verifica se já existe um app Firebase rodando, para evitar erro de re-inicialização
+# 🔐 Inicializa o Firebase apenas uma vez, usando a chave do projeto (firebase_key.json)
 if not firebase_admin._apps:
-    # 🔐 Carrega a chave do Firebase (arquivo deve estar na raiz do projeto)
-    cred = credentials.Certificate("firebase_creentials.json")  # Certifique-se de que o nome do arquivo está certo
+    cred = credentials.Certificate("firebase_key.json")  # Arquivo gerado no Firebase Console
     firebase_admin.initialize_app(cred, {
-        "databaseURL": "https://santchat-ia-default-rtdb.firebaseio.com"  # ❗ Substitua pela sua URL do Firebase Realtime Database
+        "databaseURL": "https://SEU_PROJETO.firebaseio.com"  # ⬅️ Substitua pela sua URL real do Firebase Realtime Database
     })
 
-# Configurações de segurança e chave API via st.secrets
+# 📦 Configurações de segurança e chave da API OpenRouter
 OPENROUTER_KEY = st.secrets.get("OPENROUTER_KEY", "")
 SENHA_ATIVADA = str(st.secrets.get("SENHA_ATIVADA", "false")).lower() == "true"
 SENHA_PADRAO = st.secrets.get("SENHA_PADRAO", "1234")
 
+# 🔑 Define chave da API e URL base da OpenRouter
 openai.api_key = OPENROUTER_KEY
-openai.base_url = "https://openrouter.ai/api/v1"  # <--- ESSA LINHA DEFINE O OPENROUTER
+openai.base_url = "https://openrouter.ai/api/v1"
 
-# Arquivo para salvar memória global da IA
-MEMORIA_FILE = "memoria_global.json"
-
-# Pasta logs
+# 📁 Pasta onde logs por IP são armazenados
 LOGS_DIR = "logs"
 
+# 🧠 Carrega a memória da IA do Firebase
 def carregar_memoria():
     try:
         ref = db.reference("memoria_global")
@@ -42,6 +41,7 @@ def carregar_memoria():
         print(f"Erro ao carregar memória do Firebase: {e}")
         return []
 
+# 💾 Salva a memória da IA no Firebase
 def salvar_memoria(memoria):
     try:
         ref = db.reference("memoria_global")
@@ -49,6 +49,7 @@ def salvar_memoria(memoria):
     except Exception as e:
         print(f"Erro ao salvar memória no Firebase: {e}")
 
+# 📝 Salva logs da conversa em arquivos separados por IP
 def salvar_log(ip, conteudo):
     pasta_ip = os.path.join(LOGS_DIR, ip.replace(":", "_"))
     os.makedirs(pasta_ip, exist_ok=True)
@@ -57,6 +58,7 @@ def salvar_log(ip, conteudo):
     with open(arquivo_log, "a", encoding="utf-8") as f:
         f.write(conteudo + "\n")
 
+# 🌐 Obtém o IP do usuário (via query string ou local)
 def obter_ip():
     try:
         ip = st.query_params.get("ip", ["localhost"])[0]
@@ -64,11 +66,14 @@ def obter_ip():
         ip = "localhost"
     return ip
 
+# 🧠 Gera resposta com base no histórico de memória e mensagem do usuário
 def gerar_resposta(memoria, prompt):
     mensagens = [{"role": "system", "content": "Você é uma IA superinteligente e direta."}]
+    
     if memoria:
         memoria_texto = "\n".join(memoria)
         mensagens.append({"role": "system", "content": f"Memória global da IA:\n{memoria_texto}"})
+    
     mensagens.append({"role": "user", "content": prompt})
 
     try:
@@ -103,10 +108,12 @@ def gerar_resposta(memoria, prompt):
 
     return resposta
 
+# 🚀 Função principal da interface
 def main():
     st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
     st.markdown("<h1 style='text-align: center;'>SantChat - IA Interna Santander</h1>", unsafe_allow_html=True)
 
+    # 🔐 Proteção por senha, se ativado via st.secrets
     if SENHA_ATIVADA:
         if "login_tentado" not in st.session_state:
             st.session_state["login_tentado"] = False
@@ -128,25 +135,27 @@ def main():
                 st.warning("Senha incorreta.")
             st.stop()
 
+    # 🧠 Memória e IP
     memoria = carregar_memoria()
     ip_usuario = obter_ip()
 
     if "historico" not in st.session_state:
         st.session_state.historico = []
 
-    # Exibir conversa anterior (estilo bolhas)
+    # 💬 Exibe histórico de mensagens estilo bolha
     for chat in st.session_state.historico:
         with st.chat_message("user"):
             st.markdown(chat["user"])
         with st.chat_message("assistant"):
             st.markdown(chat["bot"])
 
-    # Campo de input igual ao ChatGPT
+    # 📥 Input do usuário
     entrada_usuario = st.chat_input("Digite sua mensagem")
 
     if entrada_usuario:
         salvar_log(ip_usuario, f"Usuário: {entrada_usuario}")
 
+        # 🧠 Comando para atualizar memória da IA
         if entrada_usuario.lower().startswith("/sntevksi"):
             novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
             if novo_conhecimento:
@@ -158,15 +167,16 @@ def main():
         else:
             resposta = gerar_resposta(memoria, entrada_usuario)
 
+        # 📦 Atualiza histórico e salva log da resposta
         st.session_state.historico.append({"user": entrada_usuario, "bot": resposta})
         salvar_log(ip_usuario, f"Bot: {resposta}")
 
-        # Mostrar imediatamente a nova mensagem
+        # 💬 Mostra nova mensagem em tempo real
         with st.chat_message("user"):
             st.markdown(entrada_usuario)
         with st.chat_message("assistant"):
             st.markdown(resposta)
 
-
+# 🟢 Executa app
 if __name__ == "__main__":
     main()
