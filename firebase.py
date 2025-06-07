@@ -5,7 +5,7 @@ def iniciar_firebase():
     if not firebase_admin._apps:
         cred = credentials.Certificate("firebase_credentials.json")
         firebase_admin.initialize_app(cred, {
-            'databaseURL': "https://SEU_URL.firebaseio.com/"  # 🔁 coloque sua URL aqui!
+            'databaseURL': "https://santchat-ia-default-rtdb.firebaseio.com/"  # 🔁 coloque sua URL aqui!
         })
 
 def salvar_memoria_firebase(memoria):
