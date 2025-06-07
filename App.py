@@ -5,6 +5,7 @@ from datetime import datetime
 import openai
 import socket
 import requests
+from firebase_admin import db
 
 # Configurações de segurança e chave API via st.secrets
 OPENROUTER_KEY = st.secrets.get("OPENROUTER_KEY", "")
@@ -22,15 +23,21 @@ LOGS_DIR = "logs"
 
 def carregar_memoria():
     try:
-        with open(MEMORIA_FILE, "r", encoding="utf-8") as f:
-            memoria = json.load(f)
-    except:
-        memoria = []
-    return memoria
+        ref = db.reference("memoria_global")
+        memoria = ref.get()
+        if memoria is None:
+            return []
+        return memoria
+    except Exception as e:
+        print(f"Erro ao carregar memória do Firebase: {e}")
+        return []
 
 def salvar_memoria(memoria):
-    with open(MEMORIA_FILE, "w", encoding="utf-8") as f:
-        json.dump(memoria, f, indent=2, ensure_ascii=False)
+    try:
+        ref = db.reference("memoria_global")
+        ref.set(memoria)
+    except Exception as e:
+        print(f"Erro ao salvar memória no Firebase: {e}")
 
 def salvar_log(ip, conteudo):
     pasta_ip = os.path.join(LOGS_DIR, ip.replace(":", "_"))
