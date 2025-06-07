@@ -154,21 +154,19 @@ def main():
     entrada_usuario = st.chat_input("Digite sua mensagem")
 
     if entrada_usuario:
-        salvar_log(ip_usuario, f"Usuário: {entrada_usuario}")
+    salvar_log(ip_usuario, f"Usuário: {entrada_usuario}")
 
-        # 🧠 Comando para atualizar memória da IA
     if entrada_usuario.lower().startswith("/sntevksi"):
-    # Extrai o conteúdo da mensagem após o comando
-    novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
-    
-    if novo_conhecimento:
-        # Adiciona o novo conhecimento à memória e salva no Firebase
-        memoria.append(novo_conhecimento)
-        salvar_memoria(memoria)
-        resposta = "Memória atualizada com sucesso!"
-    else:
-        resposta = "Por favor, envie uma frase para aprender após o comando /sntevksi."
+        # Extrai o conteúdo da mensagem após o comando
+        novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
 
+        if novo_conhecimento:
+            # Adiciona o novo conhecimento à memória e salva no Firebase
+            memoria.append(novo_conhecimento)
+            salvar_memoria(memoria)
+            resposta = "Memória atualizada com sucesso!"
+        else:
+            resposta = "Por favor, envie uma frase para aprender após o comando /sntevksi."
     else:
         resposta = gerar_resposta(memoria, entrada_usuario)
 
@@ -181,6 +179,7 @@ def main():
         st.markdown(entrada_usuario)
     with st.chat_message("assistant"):
         st.markdown(resposta)
+
 
 # 🟢 Executa app
 if __name__ == "__main__":
