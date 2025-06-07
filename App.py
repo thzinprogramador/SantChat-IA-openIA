@@ -5,7 +5,17 @@ from datetime import datetime
 import openai
 import socket
 import requests
-from firebase_admin import db
+# 🔧 Firebase: Inicialização obrigatória da conexão
+import firebase_admin
+from firebase_admin import credentials, db
+
+# Verifica se já existe um app Firebase rodando, para evitar erro de re-inicialização
+if not firebase_admin._apps:
+    # 🔐 Carrega a chave do Firebase (arquivo deve estar na raiz do projeto)
+    cred = credentials.Certificate("firebase_creentials.json")  # Certifique-se de que o nome do arquivo está certo
+    firebase_admin.initialize_app(cred, {
+        "databaseURL": "https://santchat-ia-default-rtdb.firebaseio.com"  # ❗ Substitua pela sua URL do Firebase Realtime Database
+    })
 
 # Configurações de segurança e chave API via st.secrets
 OPENROUTER_KEY = st.secrets.get("OPENROUTER_KEY", "")
