@@ -157,7 +157,7 @@ def main():
         salvar_log(ip_usuario, f"Usuário: {entrada_usuario}")
 
         # 🧠 Comando para atualizar memória da IA
-        if entrada_usuario.lower().startswith("/sntevksi"):
+    if entrada_usuario.lower().startswith("/sntevksi"):
     novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
     if novo_conhecimento:
         memoria.append(novo_conhecimento)
