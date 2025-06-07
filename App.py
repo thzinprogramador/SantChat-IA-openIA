@@ -87,7 +87,8 @@ def gerar_resposta(memoria, prompt):
     return resposta
 
 def main():
-    st.title("SantChat - IA Interna Santander")
+    st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
+    st.markdown("<h1 style='text-align: center;'>SantChat - IA Interna Santander</h1>", unsafe_allow_html=True)
 
     if SENHA_ATIVADA:
         if "login_tentado" not in st.session_state:
@@ -116,7 +117,15 @@ def main():
     if "historico" not in st.session_state:
         st.session_state.historico = []
 
-    entrada_usuario = st.text_input("Digite sua mensagem:")
+    # Exibir conversa anterior (estilo bolhas)
+    for chat in st.session_state.historico:
+        with st.chat_message("user"):
+            st.markdown(chat["user"])
+        with st.chat_message("assistant"):
+            st.markdown(chat["bot"])
+
+    # Campo de input igual ao ChatGPT
+    entrada_usuario = st.chat_input("Digite sua mensagem")
 
     if entrada_usuario:
         salvar_log(ip_usuario, f"Usuário: {entrada_usuario}")
@@ -135,9 +144,12 @@ def main():
         st.session_state.historico.append({"user": entrada_usuario, "bot": resposta})
         salvar_log(ip_usuario, f"Bot: {resposta}")
 
-    for chat in st.session_state.historico:
-        st.markdown(f"**Você:** {chat['user']}")
-        st.markdown(f"**SantChat:** {chat['bot']}")
+        # Mostrar imediatamente a nova mensagem
+        with st.chat_message("user"):
+            st.markdown(entrada_usuario)
+        with st.chat_message("assistant"):
+            st.markdown(resposta)
+
 
 if __name__ == "__main__":
     main()
