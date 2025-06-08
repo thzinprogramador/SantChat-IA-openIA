@@ -242,14 +242,14 @@ def main():
         st.markdown(f"**{tipo}:** {msg['texto']}")
 
 
-# 💬 Entrada do usuário
-    entrada = st.chat_input("Digite sua mensagem")
-    if entrada:
-        st.session_state.ultima_interacao = datetime.now()
-        st.session_state.historico.append({"origem": "user", "texto": entrada})
-        resposta = gerar_resposta(st.session_state.memoria, entrada)
-        st.session_state.historico.append({"origem": "assistant", "texto": resposta})
-        st.rerun()
+    # 💬 Entrada do usuário
+        entrada = st.chat_input("Digite sua mensagem")
+        if entrada:
+            st.session_state.ultima_interacao = datetime.now()
+            st.session_state.historico.append({"origem": "user", "texto": entrada})
+            resposta = gerar_resposta(st.session_state.memoria, entrada)
+            st.session_state.historico.append({"origem": "assistant", "texto": resposta})
+            st.rerun()
 
         elif choice == "Memória IA":
             st.header("🧠 Memória Global da IA")
