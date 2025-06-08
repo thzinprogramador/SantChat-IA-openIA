@@ -119,6 +119,7 @@ def gerar_resposta(memoria, prompt):
 
 # 🚀 Interface principal
 def main():
+    st.write("🔑 Chave OpenRouter:", OPENROUTER_KEY[:10] + "..." if OPENROUTER_KEY else "⚠️ NÃO CARREGADA")
     st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
     st.markdown("<h1 style='text-align: center;'>SantChat - IA Interna Santander</h1>", unsafe_allow_html=True)
 
