@@ -136,7 +136,7 @@ def main():
     st.markdown("<div class='chat-header'><h1>🤖 SantChat</h1><p>IA interna para colaboradores do Santander</p></div>", unsafe_allow_html=True)
 
     # 🧑 Identificação do usuário
-    user_id = obter_id_usuario()
+    user_id = st.session_state["user_id"]
     is_dev = desbloquear_memoria_e_feed(user_id)
 
     # 🧠 Inicializa estados
