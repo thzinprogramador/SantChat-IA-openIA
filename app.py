@@ -136,8 +136,14 @@ def main():
     st.markdown("<div class='chat-header'><h1>🤖 SantChat</h1><p>IA interna para colaboradores do Santander</p></div>", unsafe_allow_html=True)
 
     # 🧑 Identificação do usuário
+    # Primeiro garante que user_id e user_type estão definidos
+    if "user_type" not in st.session_state:
+        st.session_state["user_type"] = "guest"
+        st.session_state["user_id"] = f"guest-{uuid.uuid4().hex[:6]}"
+
     user_id = st.session_state["user_id"]
-    is_dev = desbloquear_memoria_e_feed(user_id)
+    is_dev = st.session_state.get("user_type") == "dev"
+
 
     # 🧠 Inicializa estados
     if "memoria" not in st.session_state:
