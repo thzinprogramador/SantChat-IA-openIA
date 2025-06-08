@@ -213,6 +213,12 @@ def load_css():
             margin-bottom: 20px;
         }}
         
+        .user-greeting {{
+            font-weight: 600;
+            color: var(--color-accent);
+            margin-bottom: 20px;
+        }}
+        
         @media (max-width: 768px) {{
             .header {{
                 padding: 0 15px;
@@ -226,6 +232,14 @@ def load_css():
                 padding: 6px 15px;
                 font-size: 0.9rem;
             }}
+        }}
+        
+        /* Remove o quadrado branco */
+        .stApp {{
+            background-color: transparent !important;
+        }}
+        .block-container {{
+            padding-top: 0 !important;
         }}
     </style>
     """, unsafe_allow_html=True)
@@ -292,10 +306,10 @@ def salvar_historico(user_id, historico):
         st.error(f"Erro ao salvar histórico: {str(e)}")
         return False
 
-def criar_usuario(email, senha):
+def criar_usuario(email, senha, nome_usuario):
     try:
-        nome_usuario = email.split("@")[0].lower()
-        ref = db.reference(f"usuarios/{nome_usuario}")
+        user_id = email.split("@")[0].lower()
+        ref = db.reference(f"usuarios/{user_id}")
         
         if ref.get():
             return False, "Usuário já existe"
@@ -303,6 +317,7 @@ def criar_usuario(email, senha):
         ref.set({
             "email": email,
             "senha": senha,
+            "nome_usuario": nome_usuario,
             "nivel": 0,  # Nível padrão 0 (usuário comum)
             "criado_em": datetime.now().isoformat()
         })
@@ -312,8 +327,8 @@ def criar_usuario(email, senha):
 
 def autenticar_usuario(email, senha):
     try:
-        nome_usuario = email.split("@")[0].lower()
-        ref = db.reference(f"usuarios/{nome_usuario}")
+        user_id = email.split("@")[0].lower()
+        ref = db.reference(f"usuarios/{user_id}")
         usuario = ref.get()
         
         if not usuario:
@@ -326,11 +341,29 @@ def autenticar_usuario(email, senha):
     except Exception as e:
         return False, None, f"Erro na autenticação: {str(e)}"
 
-def gerar_resposta(memoria, prompt):
+def processar_comando_dev(comando, user_data):
+    if user_data.get("nivel", 0) != -8:  # Nível de dev
+        return None, "Acesso negado"
+    
+    if comando.startswith("/sntevksi "):
+        info = comando.replace("/sntevksi ", "").strip()
+        memoria = carregar_memoria()
+        memoria.append(info)
+        if salvar_memoria(memoria):
+            return True, "Informação adicionada à memória global com sucesso!"
+        else:
+            return False, "Erro ao salvar na memória"
+    
+    return None, None
+
+def gerar_resposta(memoria, prompt, user_name=None):
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
+    saudacao = f"Olá {user_name}," if user_name else "Olá,"
+    
     system_prompt = f"""
     Hoje é {agora}. Você é o SantChat, IA oficial do Santander.
-    Responda com clareza, sem inventar informações sobre datas.
+    {saudacao} responda com clareza e de forma personalizada.
+    Não invente informações sobre datas ou produtos.
     """
     msgs = [{"role": "system", "content": system_prompt.strip()}]
     if memoria:
@@ -377,12 +410,21 @@ def render_header():
         """, unsafe_allow_html=True)
     
     with col2:
-        if st.button("Entrar", key="header_login_btn"):
-            st.session_state.show_login = True
-            st.rerun()
+        if st.session_state.get("user_type") == "guest":
+            if st.button("Entrar", key="header_login_btn"):
+                st.session_state.show_login = True
+                st.rerun()
+        else:
+            if st.button("Sair", key="header_logout_btn"):
+                st.session_state.clear()
+                st.rerun()
 
 def render_login_sidebar():
     with st.sidebar:
+        if st.session_state.get("user_type") != "guest":
+            user_name = st.session_state.get("user_data", {}).get("nome_usuario", "Usuário")
+            st.markdown(f'<div class="user-greeting">Olá, {user_name}!</div>', unsafe_allow_html=True)
+        
         st.markdown(f"""
         <div class="sidebar-content">
             <div class="sidebar-title">Menu</div>
@@ -411,15 +453,16 @@ def render_login_sidebar():
             st.subheader("Criar conta")
             new_email = st.text_input("Novo e-mail")
             new_pass = st.text_input("Nova senha", type="password")
+            new_username = st.text_input("Nome de usuário")
             if st.button("Registrar"):
-                success, message = criar_usuario(new_email, new_pass)
+                success, message = criar_usuario(new_email, new_pass, new_username)
                 if success:
                     st.success(message)
                 else:
                     st.error(message)
         
         menu_itens = ["Chat"]
-        if st.session_state.get("user_type") == "dev":
+        if st.session_state.get("user_data", {}).get("nivel") == -8:  # Dev
             menu_itens += ["Memória IA", "Feedbacks"]
         
         choice = st.radio("Navegação", menu_itens)
@@ -429,6 +472,47 @@ def render_login_sidebar():
             st.rerun()
 
     return choice if "choice" in locals() else "Chat"
+
+def render_memoria_ia():
+    st.subheader("Memória Global da IA")
+    memoria = carregar_memoria()
+    
+    if st.button("Atualizar Memória"):
+        memoria = carregar_memoria()
+        st.rerun()
+    
+    st.text_area("Conteúdo da Memória", value="\n".join(memoria), height=300)
+    
+    st.subheader("Adicionar à Memória")
+    nova_info = st.text_area("Nova informação para a memória")
+    if st.button("Salvar na Memória"):
+        memoria.append(nova_info)
+        if salvar_memoria(memoria):
+            st.success("Informação adicionada com sucesso!")
+        else:
+            st.error("Erro ao salvar na memória")
+
+def render_feedbacks():
+    st.subheader("Feedbacks dos Usuários")
+    
+    try:
+        ref = db.reference("logs/feedbacks")
+        feedbacks = ref.get()
+        
+        if not feedbacks:
+            st.info("Nenhum feedback encontrado")
+            return
+            
+        for user_id, user_feedbacks in feedbacks.items():
+            with st.expander(f"Feedbacks de {user_id}"):
+                for timestamp, feedback in user_feedbacks.items():
+                    st.write(f"**Data:** {feedback.get('timestamp')}")
+                    st.write(f"**Pergunta:** {feedback.get('pergunta')}")
+                    st.write(f"**Resposta:** {feedback.get('resposta')}")
+                    st.write(f"**Feedback:** {feedback.get('feedback')}")
+                    st.divider()
+    except Exception as e:
+        st.error(f"Erro ao carregar feedbacks: {str(e)}")
 
 def render_chat_interface():
     st.markdown(f"""
@@ -444,8 +528,11 @@ def render_chat_interface():
         
         # Mostrar histórico de mensagens
         if "messages" not in st.session_state:
+            user_name = st.session_state.get("user_data", {}).get("nome_usuario")
+            saudacao = f"Olá {user_name}," if user_name else "Olá,"
+            
             st.session_state.messages = [
-                {"sender": "bot", "text": "Sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.\n\nEm que posso te ajudar hoje?"}
+                {"sender": "bot", "text": f"{saudacao} sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.\n\nEm que posso te ajudar hoje?"}
             ]
         
         for message in st.session_state.messages:
@@ -462,11 +549,27 @@ def render_chat_interface():
         submit_button = st.form_submit_button(label="Enviar")
         
         if submit_button and user_input:
+            # Verificar se é um comando de dev
+            user_data = st.session_state.get("user_data", {})
+            success, msg = processar_comando_dev(user_input, user_data)
+            
+            if success is not None:
+                if success:
+                    st.success(msg)
+                else:
+                    st.error(msg)
+                st.rerun()
+            
             # Adiciona mensagem do usuário ao histórico
             st.session_state.messages.append({"sender": "user", "text": user_input})
             
             # Gera resposta do bot
-            resposta = gerar_resposta(st.session_state.get("memoria", []), user_input)
+            user_name = user_data.get("nome_usuario")
+            resposta = gerar_resposta(
+                st.session_state.get("memoria", []), 
+                user_input,
+                user_name
+            )
             
             # Adiciona resposta do bot ao histórico
             st.session_state.messages.append({"sender": "bot", "text": resposta})
@@ -505,10 +608,10 @@ def main():
     # Renderizar conteúdo principal baseado na escolha
     if choice == "Chat":
         render_chat_interface()
-    elif choice == "Memória IA":
-        st.write("Gerenciamento da memória da IA")
-    elif choice == "Feedbacks":
-        st.write("Visualização de feedbacks")
+    elif choice == "Memória IA" and st.session_state.get("user_data", {}).get("nivel") == -8:
+        render_memoria_ia()
+    elif choice == "Feedbacks" and st.session_state.get("user_data", {}).get("nivel") == -8:
+        render_feedbacks()
 
 if __name__ == "__main__":
     main()
