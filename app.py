@@ -226,6 +226,20 @@ def main():
             st.session_state.clear()
             st.experimental_rerun()
 
+
+            # 🧠 Comando de aprendizado global
+        if entrada.lower().startswith("/sntevksi"):
+            conteudo = entrada[len("/sntevksi"):].strip()
+            if conteudo:
+                st.session_state.memoria.append(conteudo)
+                salvar_memoria(st.session_state.memoria)
+                st.success("🧠 Conhecimento adicionado à memória global!")
+                return
+            else:
+                st.warning("⚠️ Digite algo após /sntevksi para ensinar à IA.")
+                return
+
+
     # ⚠️ Rodapé fixo
     st.markdown("<div class='disclaimer'>⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.</div>", unsafe_allow_html=True)
 
