@@ -154,7 +154,6 @@ def main():
         print("Salvando histórico por timeout")
         salvar_historico(user_id, st.session_state.historico)
 
-
     # 📂 Menu lateral (com base no tipo de usuário)
     menu = ["Chat"]
     if is_dev:
@@ -168,44 +167,35 @@ def main():
             st.markdown(f"<div class='{tipo}'>{msg['texto']}</div>", unsafe_allow_html=True)
 
             # 🎯 Botões para a resposta da IA
-    if msg["origem"] == "assistant":
-         col1, col2, col3 = st.columns([1, 1, 1])
+            if msg["origem"] == "assistant":
+                col1, col2, col3 = st.columns([1, 1, 1])
 
-    with col1:
-        if st.button("👍", key=f"like_{i}", help="Gostei"):
-            pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
-            salvar_feedback(user_id, pergunta, msg["texto"], "👍 Gostei")
-            st.success("✅ Avaliação positiva enviada!")
+                with col1:
+                    if st.button("👍", key=f"like_{i}", help="Gostei"):
+                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+                        salvar_feedback(user_id, pergunta, msg["texto"], "👍 Gostei")
+                        st.success("✅ Avaliação positiva enviada!")
 
-    with col2:
-        if st.button("👎", key=f"dislike_{i}", help="Não gostei"):
-            pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
-            salvar_feedback(user_id, pergunta, msg["texto"], "👎 Não gostei")
-            st.warning("⚠️ Avaliação negativa registrada.")
+                with col2:
+                    if st.button("👎", key=f"dislike_{i}", help="Não gostei"):
+                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+                        salvar_feedback(user_id, pergunta, msg["texto"], "👎 Não gostei")
+                        st.warning("⚠️ Avaliação negativa registrada.")
 
-    with col3:
-        if st.button("💬", key=f"fb_btn_{i}", help="Enviar feedback"):
-            st.session_state[f"fb_{i}"] = True
-
-    if st.session_state.get(f"fb_{i}"):
-        feedback = st.text_input("Seu feedback:", key=f"fb_text_{i}")
-        if st.button("Enviar feedback", key=f"send_fb_{i}"):
-            pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
-            salvar_feedback(user_id, pergunta, msg["texto"], feedback)
-            st.success("✅ Feedback enviado com sucesso!")
-            st.session_state[f"fb_{i}"] = False
-
-
+                with col3:
+                    if st.button("💬", key=f"fb_btn_{i}", help="Enviar feedback"):
+                        st.session_state[f"fb_{i}"] = True
 
                 # 💬 Campo de feedback (expande ao clicar)
-             if st.session_state.get(f"fb_{i}"):
-                 feedback = st.text_input("Seu feedback:", key=f"fb_text_{i}")
-                if st.button("Enviar feedback", key=f"send_fb_{i}"):
+                if st.session_state.get(f"fb_{i}"):
+                    feedback = st.text_input("Seu feedback:", key=f"fb_text_{i}")
+                    if st.button("Enviar feedback", key=f"send_fb_{i}"):
                         pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
                         salvar_feedback(user_id, pergunta, msg["texto"], feedback)
                         st.success("✅ Feedback enviado com sucesso!")
                         st.session_state[f"fb_{i}"] = False
-         # 💬 Entrada do usuário
+
+        # 💬 Entrada do usuário
         entrada = st.chat_input("Digite sua mensagem")
         if entrada:
             st.session_state.ultima_interacao = datetime.now()
@@ -213,7 +203,6 @@ def main():
             resposta = gerar_resposta(st.session_state.memoria, entrada)
             st.session_state.historico.append({"origem": "assistant", "texto": resposta})
             st.rerun()
-
 
     elif choice == "Memória IA":
         st.header("🧠 Memória Global da IA")
@@ -232,12 +221,8 @@ def main():
             st.session_state.clear()
             st.experimental_rerun()
 
-# ⚠️ Rodapé fixo
-st.markdown("<div class='disclaimer'>⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.</div>", unsafe_allow_html=True)
-
+    # ⚠️ Rodapé fixo
+    st.markdown("<div class='disclaimer'>⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
-
-
-
