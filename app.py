@@ -9,7 +9,6 @@ import firebase_admin
 from firebase_admin import credentials, db
 from streamlit_auth0 import login_button
 from datetime import datetime
-from streamlit_oauth import OAuth2Component
 
 # --- Configurações iniciais ---
 st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
