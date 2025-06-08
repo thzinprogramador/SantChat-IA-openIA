@@ -236,14 +236,15 @@ def main():
             st.markdown(entrada_usuario)
         with st.chat_message("assistant"):
             st.markdown(resposta)
+    
 
-    # ⚠️ Rodapé estilo ChatGPT
+# 🟢 Inicia app
+if __name__ == "__main__":
+    main()
+    
+# ⚠️ Rodapé estilo ChatGPT
     st.markdown("""
         <div class="disclaimer">
             ⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.
         </div>
     """, unsafe_allow_html=True)
-
-# 🟢 Inicia app
-if __name__ == "__main__":
-    main()
