@@ -121,9 +121,14 @@ def main():
         background:#222; color:#eee; padding:10px;
         border-radius:10px; margin:8px auto 8px 0; max-width:80%;
     }
+    /* Botões mais compactos */
     button[kind="secondary"] {
-        background-color:#222!important; color:#ccc!important; border-radius:6px!important;
-        padding:4px 10px!important; font-size:20px!important; border:1px solid #444!important;
+        padding: 0.2rem 0.5rem !important;
+        margin: 0.1rem !important;
+    }
+    /* Espaçamento entre colunas */
+    .stColumns > div {
+        gap: 0.5rem;
     }
     button[kind="secondary"]:hover {
         background-color:#333!important; color:#fff!important;
