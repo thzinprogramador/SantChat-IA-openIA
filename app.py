@@ -1,256 +1,142 @@
 import streamlit as st
 import os
 import json
+import uuid
 from datetime import datetime
 import openai
-import socket
 import requests
-
-# ✅ Precisa vir ANTES de qualquer outro st.*
-st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
-
-# 🔧 Firebase
 import firebase_admin
 from firebase_admin import credentials, db
 
-# 🔐 Inicializa Firebase (apenas uma vez)
+# --- Configurações iniciais ---
+st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
+
+# --- Firebase Initialization ---
 if not firebase_admin._apps:
-    firebase_key = {
-        "type": st.secrets.FIREBASE_KEY["type"],
-        "project_id": st.secrets.FIREBASE_KEY["project_id"],
-        "private_key_id": st.secrets.FIREBASE_KEY["private_key_id"],
-        "private_key": st.secrets.FIREBASE_KEY["private_key"].replace("\\n", "\n"),
-        "client_email": st.secrets.FIREBASE_KEY["client_email"],
-        "client_id": st.secrets.FIREBASE_KEY["client_id"],
-        "auth_uri": st.secrets.FIREBASE_KEY["auth_uri"],
-        "token_uri": st.secrets.FIREBASE_KEY["token_uri"],
-        "auth_provider_x509_cert_url": st.secrets.FIREBASE_KEY["auth_provider_x509_cert_url"],
-        "client_x509_cert_url": st.secrets.FIREBASE_KEY["client_x509_cert_url"],
-        "universe_domain": st.secrets.FIREBASE_KEY.get("universe_domain", "googleapis.com")
-    }
+    firebase_key = { k: (v.replace("\\n","\n") if k=="private_key" else v)
+                     for k,v in st.secrets["FIREBASE_KEY"].items() }
+    firebase_admin.initialize_app(credentials.Certificate(firebase_key),
+                                  {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]})
 
-    cred = credentials.Certificate(firebase_key)
-    firebase_admin.initialize_app(cred, {
-        "databaseURL": "https://santchat-ia-default-rtdb.firebaseio.com"
-    })
-
-# 🔑 Configurações de segurança e API
+# --- API Key OpenRouter ---
 OPENROUTER_KEY = st.secrets["OPENROUTER_KEY"]
-SENHA_ATIVADA = str(st.secrets.get("SENHA_ATIVADA", "false")).lower() == "true"
-SENHA_PADRAO = st.secrets.get("SENHA_PADRAO", "1234")
-
 openai.api_key = OPENROUTER_KEY
 openai.base_url = "https://openrouter.ai/api/v1"
 
-# 📥 Carrega memória do Firebase
+# --- Desenvolvedores autorizados ---
+DEVS = ["thiago@santander.com.br", "T762981"]
+
+# --- Funções Auxiliares ---
+def obter_id_usuario():
+    if "user_id" not in st.session_state:
+        if st.session_state.get("use_microsoft"):
+            # Simulação de login MSO
+            email = "thiago@santander.com.br"
+            st.session_state.user_id = email
+        else:
+            st.session_state.user_id = f"guest-{uuid.uuid4().hex[:6]}"
+    return st.session_state.user_id
+
 def carregar_memoria():
     try:
         ref = db.reference("memoria_global")
         memoria = ref.get()
         return memoria if isinstance(memoria, list) else []
-    except Exception as e:
-        print(f"Erro ao carregar memória: {e}")
+    except:
         return []
 
-# 📤 Salva memória no Firebase
-def salvar_memoria(memoria):
-    try:
-        ref = db.reference("memoria_global")
-        ref.set(memoria)
-    except Exception as e:
-        st.error(f"Erro ao salvar memória: {e}")
-        print(f"Erro ao salvar memória: {e}")
+def salvar_memoria(mem):
+    db.reference("memoria_global").set(mem)
 
-# 🛠 Salva erros globais no Firebase
-def salvar_erro(erro, contexto="geral"):
-    try:
-        agora = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        ref = db.reference(f"logs/erros/{contexto}")
-        ref.update({agora: str(erro)})
-    except Exception as e:
-        print(f"Falha ao salvar log de erro: {e}")
-
-# 📝 Log por IP
-def salvar_log(ip, conteudo):
-    try:
-        agora = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        ref = db.reference(f"logs/{ip.replace(':', '_')}")
-        ref.update({agora: conteudo})
-    except Exception as e:
-        st.error(f"Erro ao salvar log: {e}")
-        print(f"Erro ao salvar log: {e}")
-
-# 🌐 IP do usuário
-def obter_ip():
-    try:
-        return st.query_params.get("ip", ["localhost"])[0]
-    except:
-        return "localhost"
-
-# 🤖 Gera resposta com contexto de memória
 def gerar_resposta(memoria, prompt):
-    mensagens = [{
-        "role": "system",
-        "content": "Você é o SantChat, um assistente virtual inteligente. Responda com clareza e empatia."
-    }]
+    msgs = [{"role":"system","content":"Sua IA inteligente."}]
+    msgs += [{"role":"system","content": "\n".join(memoria)}] if memoria else []
+    msgs.append({"role":"user","content": prompt})
+    resp = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers={"Authorization":f"Bearer {OPENROUTER_KEY}",
+                 "Content-Type":"application/json"},
+        json={"model":"nousresearch/deephermes-3-mistral-24b-preview:free",
+              "messages":msgs, "max_tokens":500, "temperature":0.7})
+    if resp.status_code != 200:
+        return f"Erro: {resp.status_code}"
+    return resp.json()["choices"][0]["message"]["content"].strip()
 
-    if memoria:
-        memoria_texto = "\n".join(memoria)
-        mensagens.append({"role": "system", "content": f"Memória global da IA:\n{memoria_texto}"})
+def salvar_feedback(user_id, pergunta, resposta, comentario):
+   (uid,) = (user_id,)
+    ref = db.reference(f"logs/feedbacks/{uid}")
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ref.update({ts: json.dumps({"pergunta":pergunta,"resposta":resposta,"feedback":comentario})})
 
-    mensagens.append({"role": "user", "content": prompt})
+def desbloquear_memoria_e_feed(user_id):
+    return user_id in DEVS
 
-    try:
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {OPENROUTER_KEY}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://santchat.streamlit.app/",
-                "X-Title": "SantChat",
-            },
-            json={
-                "model": "nousresearch/deephermes-3-mistral-24b-preview:free",
-                "messages": mensagens,
-                "max_tokens": 500,
-                "temperature": 0.7,
-            },
-        )
-
-        if response.status_code != 200:
-            erro_msg = f"Erro HTTP {response.status_code}: {response.text}"
-            salvar_erro(erro_msg, contexto="resposta_ia")
-            return erro_msg
-
-        data = response.json()
-        return data["choices"][0]["message"]["content"].strip()
-
-    except Exception as e:
-        salvar_erro(e, contexto="resposta_ia")
-        return f"Erro na API: {str(e)}"
-
-# 🚀 Interface principal
+# --- Interface ---
 def main():
-    # 🎨 Estilo fixo e tema escuro
-    st.markdown("""
-        <style>
-            html, body {
-                background-color: #111111;
-                color: #ffffff;
-                font-family: 'Segoe UI', sans-serif;
-            }
+    st.markdown("""<style>
+    body{background:#111;color:#eee;}
+    .chat-header{position:sticky;top:0;padding:10px;text-align:center;background:#111;z-index:999;}
+    .chat-header h1{color:#ec0000;}
+    .disclaimer{position:fixed;bottom:0;width:100%;text-align:center;color:#888;padding:8px 0;background:#111;}
+    section.main > div:has(div[data-testid="stChatInput"]){padding-bottom:80px!important;}
+    .msg-user{background:#333;color:#fff;padding:8px;border-radius:8px 0px 8px 8px;float:right;clear:both;max-width:80%;}
+    .msg-assistant{background:#222;color:#eee;padding:8px;border-radius:0px 8px 8px 8px;float:left;clear:both;max-width:80%;}
+    </style>""", unsafe_allow_html=True)
 
-            .chat-header {
-                position: sticky;
-                top: 0;
-                background-color: #111111;
-                padding: 20px 0 10px 0;
-                text-align: center;
-                z-index: 999;
-                border-bottom: 1px solid #333;
-            }
+    st.markdown("<div class='chat-header'><h1>🤖 SantChat</h1></div>", unsafe_allow_html=True)
 
-            .chat-header h1 {
-                color: #ec0000;
-                margin-bottom: 5px;
-            }
+    # Sidebar
+    user_id = obter_id_usuario()
+    is_dev = desbloquear_memoria_e_feed(user_id)
 
-            .chat-header p {
-                color: #ccc;
-                margin: 0;
-                font-size: 0.9em;
-            }
+    menu = ["Chat"]
+    if is_dev:
+        menu += ["Memória IA", "Feedbacks", "Configurações"]
+    choice = st.sidebar.radio("Menu", menu)
 
-            .disclaimer {
-                font-size: 0.85em;
-                color: #888;
-                text-align: center;
-                padding-top: 25px;
-                margin-top: 20px;
-                border-top: 1px solid #444;
-            }
+    if choice == "Chat":
+        if "memoria" not in st.session_state:
+            st.session_state.memoria = carregar_memoria()
+            st.session_state.historico = []
+        for msg in st.session_state.historico:
+            css = "msg-user" if msg["origem"]=="user" else "msg-assistant"
+            st.markdown(f"<div class='{css}'>{msg['texto']}</div>", unsafe_allow_html=True)
+        entrada = st.chat_input("Digite sua mensagem")
+        if entrada:
+            st.session_state.historico.append({"origem":"user","texto":entrada})
+            respuesta = gerar_resposta(st.session_state.memoria, entrada)
+            st.session_state.historico.append({"origem":"assistant","texto":respuesta})
 
-            section.main > div:has(div[data-testid="stChatInput"]) {
-                padding-bottom: 60px !important;
-            }
-        </style>
-    """, unsafe_allow_html=True)
+            # Botões
+            st.write(f"{respuesta}")
+            co, cu, fe = st.columns([0.1,0.1,0.2])
+            with co:
+                if st.button("📋 Copiar"):
+                    st.write(respuesta)
+            with cu:
+                if st.button("👍"):
+                    pass
+            with fe:
+                txt = st.text_input("Feedback?")
+                if st.button("Enviar"):
+                    salvar_feedback(user_id, entrada, respuesta, txt)
+                    st.success("Obrigado!")
 
-    # 🎯 Cabeçalho
-    st.markdown("""
-        <div class='chat-header'>
-            <h1>🤖 <strong>SantChat</strong></h1>
-            <p>IA interna para colaboradores do Santander</p>
-        </div>
-    """, unsafe_allow_html=True)
+    elif choice == "Memória IA":
+        st.header("Memória Global")
+        mem = carregar_memoria()
+        st.write(mem)
+    elif choice == "Feedbacks":
+        st.header("Feedbacks Recebidos")
+        for k, v in db.reference(f"logs/feedbacks/{user_id}").get(_,{}).items():
+            st.write(json.loads(v))
+    elif choice == "Configurações":
+        st.header("Configurações")
+        if st.button("Logout"):
+            st.session_state.clear()
+            st.experimental_rerun()
 
-    # 🔒 Validação da senha (opcional)
-    if SENHA_ATIVADA:
-        if "senha_valida" not in st.session_state:
-            senha_input = st.text_input("Digite a senha:", type="password")
-            if st.button("Entrar"):
-                if senha_input == SENHA_PADRAO:
-                    st.session_state["senha_valida"] = True
-                    st.experimental_rerun()
-                else:
-                    st.warning("Senha incorreta.")
-                    st.stop()
-        elif not st.session_state["senha_valida"]:
-            st.stop()
+    st.markdown("<div class='disclaimer'>⚠️ O SantChat pode cometer erros.</div>", unsafe_allow_html=True)
 
-    # 📡 IP do usuário
-    ip_usuario = obter_ip()
-
-    # 📖 Memória persistente
-    if "memoria" not in st.session_state:
-        st.session_state.memoria = carregar_memoria()
-
-    # 💬 Histórico de conversa
-    if "historico" not in st.session_state:
-        st.session_state.historico = []
-
-    for chat in st.session_state.historico:
-        with st.chat_message("user"):
-            st.markdown(chat["user"])
-        with st.chat_message("assistant"):
-            st.markdown(chat["bot"])
-
-    entrada_usuario = st.chat_input("Digite sua mensagem")
-
-    if entrada_usuario:
-        salvar_log(ip_usuario, f"Usuário: {entrada_usuario}")
-
-        if entrada_usuario.lower().startswith("/sntevksi"):
-            novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
-            if novo_conhecimento:
-                try:
-                    st.session_state.memoria.append(novo_conhecimento)
-                    salvar_memoria(st.session_state.memoria)
-                    resposta = "✅ Conhecimento adicionado à memória global!"
-                except Exception as e:
-                    st.error(f"❌ Erro ao salvar memória: {e}")
-                    resposta = "⚠️ Ocorreu um erro ao tentar salvar a memória."
-            else:
-                resposta = "⚠️ Por favor, escreva algo após o comando /sntevksi."
-        else:
-            resposta = gerar_resposta(st.session_state.memoria, entrada_usuario)
-
-        st.session_state.historico.append({"user": entrada_usuario, "bot": resposta})
-        salvar_log(ip_usuario, f"Bot: {resposta}")
-
-        with st.chat_message("user"):
-            st.markdown(entrada_usuario)
-        with st.chat_message("assistant"):
-            st.markdown(resposta)
-
-    # ⚠️ Rodapé fixo
-    st.markdown("""
-        <div class="disclaimer">
-            ⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.
-        </div>
-    """, unsafe_allow_html=True)
-
-# 🟢 Executa app
 if __name__ == "__main__":
     main()
-
