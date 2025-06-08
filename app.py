@@ -9,7 +9,8 @@ import firebase_admin
 from firebase_admin import credentials, db
 
 # --- Configurações iniciais ---
-st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
+st.set_page_config(page_title="SantChat", page_icon="🤖", layout="wide")
+col1, col2 = st.columns([1, 5])
 
 # --- Firebase Initialization ---
 if not firebase_admin._apps:
