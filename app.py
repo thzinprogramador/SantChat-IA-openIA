@@ -240,6 +240,7 @@ def main():
         tipo = "Usuário" if msg["origem"] == "user" else "SantChat"
         st.markdown(f"**{tipo}:** {msg['texto']}")
 
+
         # 💬 Entrada do usuário
         entrada = st.chat_input("Digite sua mensagem")
         if entrada:
