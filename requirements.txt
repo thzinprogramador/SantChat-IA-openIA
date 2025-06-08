@@ -4,3 +4,4 @@ openai
 requests
 msal
 streamlit-oauth==0.1.14
+streamlit-authenticator==0.2.2
