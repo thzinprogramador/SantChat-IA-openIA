@@ -7,6 +7,7 @@ import openai
 import requests
 import firebase_admin
 from firebase_admin import credentials, db
+from streamlit_oauth import OAuth2Component
 from datetime import datetime
 
 # --- Configurações iniciais ---
@@ -18,6 +19,17 @@ if not firebase_admin._apps:
                      for k,v in st.secrets["FIREBASE_KEY"].items() }
     firebase_admin.initialize_app(credentials.Certificate(firebase_key),
                                   {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]})
+
+# Autenticador google (por enquanto)
+auth0 = OAuth2Component(
+    client_id=st.secrets["AUTH0_CLIENT_ID"],
+    client_secret=st.secrets["AUTH0_CLIENT_SECRET"],
+    authorize_url=f"https://{st.secrets['AUTH0_DOMAIN']}/authorize",
+    token_url=f"https://{st.secrets['AUTH0_DOMAIN']}/oauth/token",
+    redirect_uri=st.secrets["AUTH0_REDIRECT_URI"],
+    scope="openid profile email",
+    name="auth0"
+)
 
 # --- API Key OpenRouter ---
 OPENROUTER_KEY = st.secrets["OPENROUTER_KEY"]
@@ -134,6 +146,32 @@ def main():
         background-color:#333!important; color:#fff!important;
     }
     </style>""", unsafe_allow_html=True)
+
+# --- Login ou acesso anônimo ---
+    if "auth_mode" not in st.session_state:
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔐 Entrar com Google"):
+                token = auth0.authorize_button("Continuar com Google", icon=False)
+                if token:
+                    user_info = requests.get(
+                        f"https://{st.secrets['AUTH0_DOMAIN']}/userinfo",
+                        headers={"Authorization": f"Bearer {token['access_token']}"}
+                    ).json()
+                    st.session_state["auth_mode"] = "google"
+                    st.session_state["user_email"] = user_info["email"]
+                    st.session_state["user_id"] = user_info["email"]
+                    st.rerun()
+        with col2:
+            if st.button("🚪 Continuar como convidado"):
+                st.session_state["auth_mode"] = "guest"
+                st.session_state["user_id"] = f"guest-{uuid.uuid4().hex[:6]}"
+                st.rerun()
+        st.stop()
+
+    # Define user_id mesmo se já estiver autenticado
+    user_id = st.session_state.get("user_id", f"guest-{uuid.uuid4().hex[:6]}")
+    is_dev = user_id in DEVS
 
     # 🧢 Cabeçalho fixo
     st.markdown("<div class='chat-header'><h1>🤖 SantChat</h1><p>IA interna para colaboradores do Santander</p></div>", unsafe_allow_html=True)
