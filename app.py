@@ -82,15 +82,35 @@ def gerar_resposta(memoria, prompt):
     if memoria:
         msgs.append({"role": "system", "content": "\n".join(memoria)})
     msgs.append({"role": "user", "content": prompt})
-    resp = requests.post(
-        "https://openrouter.ai/api/v1/chat/completions",
-        headers={"Authorization": f"Bearer {OPENROUTER_KEY}",
-                 "Content-Type": "application/json"},
-        json={"model": "nousresearch/deephermes-3-mistral-24b-preview:free",
-              "messages": msgs, "max_tokens": 500, "temperature": 0.7})
-    if resp.status_code != 200:
-        return f"Erro: {resp.status_code}"
-    return resp.json()["choices"][0]["message"]["content"].strip()
+    
+    try:
+        resp = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "nousresearch/deephermes-3-mistral-24b-preview:free",
+                "messages": msgs,
+                "max_tokens": 500,
+                "temperature": 0.7
+            },
+            timeout=15
+        )
+        
+        if resp.status_code != 200:
+            return f"Erro na API OpenRouter: {resp.status_code} - {resp.text}"
+        
+        data = resp.json()
+        if "choices" in data and data["choices"]:
+            return data["choices"][0]["message"]["content"].strip()
+        else:
+            return "⚠️ A resposta da IA veio vazia ou incompleta."
+
+    except Exception as e:
+        return f"⚠️ Erro ao gerar resposta: {str(e)}"
+
 
 # --- Interface ---
 def main():
