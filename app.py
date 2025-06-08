@@ -23,13 +23,13 @@ if not firebase_admin._apps:
 st.write(type(st.secrets["AUTH0"]))
 
 auth0_response = login_button(
-    client_id=st.secrets.AUTH0.CLIENT_ID,
-    domain=st.secrets.AUTH0.DOMAIN,
-    redirect_uri=st.secrets.AUTH0.REDIRECT_URI
+    client_id=st.secrets["AUTH0"].get("CLIENT_ID"),
+    domain=st.secrets["AUTH0"].get("DOMAIN"),
+    redirect_uri=st.secrets["AUTH0"].get("REDIRECT_URI")
 )
 
 # Autenticador google (por enquanto)
-auth0_secrets = st.secrets["AUTH0"]
+
 
 
 # --- API Key OpenRouter ---
