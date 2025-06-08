@@ -7,6 +7,7 @@ import openai
 import requests
 import firebase_admin
 from firebase_admin import credentials, db
+from datetime import datetime
 
 # --- Configurações iniciais ---
 st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
@@ -76,6 +77,7 @@ def desbloquear_memoria_e_feed(user_id):
 
 # 🤖 Gera resposta com contexto da memória
 def gerar_resposta(memoria, prompt):
+    now = datetime.now().strftime("%d/%m/%Y %H:%M")
     msgs = [{"role":"system","content":"Você é o SantChat, IA interna do Santander."}]
     if memoria:
         msgs.append({"role":"system","content": "\n".join(memoria)})
@@ -145,6 +147,9 @@ def main():
             salvar_historico(user_id, st.session_state.historico)
             st.session_state.historico = []
         st.session_state.ultima_interacao = datetime.now()
+        print("Salvando histórico por timeout")
+        salvar_historico(user_id, st.session_state.historico)
+
 
     # 📂 Menu lateral (com base no tipo de usuário)
     menu = ["Chat"]
@@ -190,6 +195,8 @@ def main():
             st.session_state.historico.append({"origem": "user", "texto": entrada})
             resposta = gerar_resposta(st.session_state.memoria, entrada)
             st.session_state.historico.append({"origem": "assistant", "texto": resposta})
+            st.rerun()
+
 
     elif choice == "Memória IA":
         st.header("🧠 Memória Global da IA")
@@ -208,8 +215,9 @@ def main():
             st.session_state.clear()
             st.experimental_rerun()
 
-    # ⚠️ Rodapé fixo
-    st.markdown("<div class='disclaimer'>⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.</div>", unsafe_allow_html=True)
+# ⚠️ Rodapé fixo
+st.markdown("<div class='disclaimer'>⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.</div>", unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
