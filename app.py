@@ -7,7 +7,7 @@ import openai
 import requests
 import firebase_admin
 from firebase_admin import credentials, db
-from streamlit_oauth import OAuth2Component
+from streamlit_auth0 import login_button
 from datetime import datetime
 
 # --- Configurações iniciais ---
