@@ -169,39 +169,37 @@ def main():
     choice = st.sidebar.radio("Menu", menu)
 
     if choice == "Chat":
-        # 🧾 Mostrar histórico de mensagens
+        # Mostrar histórico
         for i, msg in enumerate(st.session_state.historico):
             tipo = "msg-user" if msg["origem"] == "user" else "msg-assistant"
             st.markdown(f"<div class='{tipo}'>{msg['texto']}</div>", unsafe_allow_html=True)
-
+        
             # 🎯 Botões para a resposta da IA
             if msg["origem"] == "assistant":
                 col1, col2, col3 = st.columns([1, 1, 1])
-
+                
                 with col1:
                     if st.button("👍", key=f"like_{i}", help="Gostei"):
                         pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
                         salvar_feedback(user_id, pergunta, msg["texto"], "👍 Gostei")
                         st.success("✅ Avaliação positiva enviada!")
-
                 with col2:
                     if st.button("👎", key=f"dislike_{i}", help="Não gostei"):
                         pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
                         salvar_feedback(user_id, pergunta, msg["texto"], "👎 Não gostei")
                         st.warning("⚠️ Avaliação negativa registrada.")
-
                 with col3:
                     if st.button("💬", key=f"fb_btn_{i}", help="Enviar feedback"):
                         st.session_state[f"fb_{i}"] = True
-
-                # 💬 Campo de feedback (expande ao clicar)
-                if st.session_state.get(f"fb_{i}"):
-                    feedback = st.text_input("Seu feedback:", key=f"fb_text_{i}")
-                    if st.button("Enviar feedback", key=f"send_fb_{i}"):
-                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
-                        salvar_feedback(user_id, pergunta, msg["texto"], feedback)
-                        st.success("✅ Feedback enviado com sucesso!")
-                        st.session_state[f"fb_{i}"] = False
+                    
+            # 💬 Campo de feedback (expande ao clicar)
+            if st.session_state.get(f"fb_{i}"):
+                feedback = st.text_input("Seu feedback:", key=f"fb_text_{i}")
+                if st.button("Enviar feedback", key=f"send_fb_{i}"):
+                    pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+                    salvar_feedback(user_id, pergunta, msg["texto"], feedback)
+                    st.success("✅ Feedback enviado com sucesso!")
+                    st.session_state[f"fb_{i}"] = False
 
     # --- Novo controle de login ---
     if "user_type" not in st.session_state:
@@ -242,7 +240,7 @@ def main():
         tipo = "Usuário" if msg["origem"] == "user" else "SantChat"
         st.markdown(f"**{tipo}:** {msg['texto']}")
 
-            # 💬 Entrada do usuário
+        # 💬 Entrada do usuário
         entrada = st.chat_input("Digite sua mensagem")
         if entrada:
             st.session_state.ultima_interacao = datetime.now()
