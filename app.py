@@ -194,9 +194,9 @@ def main():
 
 
                 # 💬 Campo de feedback (expande ao clicar)
-                if st.session_state.get(f"fb_{i}"):
-                    feedback = st.text_input("Seu feedback:", key=f"fb_text_{i}")
-                    if st.button("Enviar feedback", key=f"send_fb_{i}"):
+             if st.session_state.get(f"fb_{i}"):
+                 feedback = st.text_input("Seu feedback:", key=f"fb_text_{i}")
+                if st.button("Enviar feedback", key=f"send_fb_{i}"):
                         pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
                         salvar_feedback(user_id, pergunta, msg["texto"], feedback)
                         st.success("✅ Feedback enviado com sucesso!")
