@@ -96,6 +96,31 @@ def gerar_resposta(memoria, prompt):
         return f"⚠️ Erro ao gerar resposta: {str(e)}"
 
 def main():
+    col1, col2 = st.columns([1, 5])
+    with col1:
+        st.markdown("### Menu")
+        st.sidebar.markdown("# 📍 Navegação")
+        menu_itens = ["Chat", "Memória IA", "Feedbacks"]
+        choice = st.sidebar.radio("Escolha uma opção", menu_itens)
+
+        if not st.session_state.get("logado"):
+            if st.button("Entrar"):
+                st.session_state.logado = True
+                st.session_state.user_id = gerar_user_id()  # ou use o login correto
+
+    with col2:
+        st.markdown("""
+            <div style='display: flex; align-items: center; gap: 10px;'>
+                <img src='https://img.icons8.com/emoji/48/robot-emoji.png' width='32'/>
+                <h1 style='color: red; margin: 0;'>SantChat</h1>
+            </div>
+            <p style='margin-top: -10px;'>IA interna para colaboradores do Santander</p>
+        """, unsafe_allow_html=True)
+
+        if not st.session_state.get("logado"):
+            st.info("Faça login para usar o sistema.")
+            st.stop()
+    
  # 🎨 Estilo visual (tema escuro + layout fixo)
     st.markdown("""<style>
     body { background:#111; color:#eee; }
@@ -244,13 +269,19 @@ def main():
 
 
     # 💬 Entrada do usuário
-        entrada = st.chat_input("Digite sua mensagem")
-        if entrada:
-            st.session_state.ultima_interacao = datetime.now()
-            st.session_state.historico.append({"origem": "user", "texto": entrada})
-            resposta = gerar_resposta(st.session_state.memoria, entrada)
-            st.session_state.historico.append({"origem": "assistant", "texto": resposta})
-            st.rerun()
+        if choice == "Chat":
+            for i, msg in enumerate(st.session_state.get("historico", [])):
+                tipo = "msg-user" if msg["origem"] == "user" else "msg-assistant"
+                st.markdown(f"<div class='{tipo}'>{msg['texto']}</div>", unsafe_allow_html=True)
+                # seus botões 👍 👎 💬 aqui...
+
+            entrada = st.chat_input("Digite sua mensagem")
+            if entrada:
+                st.session_state.ultima_interacao = datetime.now()
+                st.session_state.historico.append({"origem": "user", "texto": entrada})
+                resposta = gerar_resposta(st.session_state.memoria, entrada)
+                st.session_state.historico.append({"origem": "assistant", "texto": resposta})
+                st.rerun()
 
         elif choice == "Memória IA":
             st.header("🧠 Memória Global da IA")
