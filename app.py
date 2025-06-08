@@ -6,6 +6,10 @@ import openai
 import socket
 import requests
 
+# ⬇️ Este deve vir aqui (antes de qualquer `st.` abaixo)
+st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
+
+
 # 🔧 Firebase
 import firebase_admin
 from firebase_admin import credentials, db
@@ -128,70 +132,72 @@ def gerar_resposta(memoria, prompt):
 
 # 🚀 Interface principal
 def main():
-    # 🎨 Tema escuro + design responsivo
-    st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
         # 🎨 Tema escuro + estilo fixo
     st.markdown("""
-        <style>
-            /* Define o fundo e texto padrão */
-            html, body {
-                background-color: #1e1e1e;
-                color: #f0f0f0;
-                font-family: 'Segoe UI', sans-serif;
-            }
+    <style>
+        /* Redefine fundo e fonte */
+        html, body {
+            background-color: #111111;
+            color: #ffffff;
+            font-family: 'Segoe UI', sans-serif;
+        }
 
-            /* Cabeçalho fixo no topo */
-            .chat-header {
-                position: sticky;
-                top: 0;
-                background-color: #1e1e1e;
-                padding: 15px 0;
-                text-align: center;
-                border-bottom: 1px solid #444;
-                z-index: 999;
-            }
+        /* Cabeçalho fixo no topo real */
+        .chat-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #111111;
+            padding: 16px 0 8px 0;
+            border-bottom: 1px solid #444;
+            z-index: 1000;
+        }
 
-            .chat-header h1 {
-                color: #ff4b4b;
-                font-size: 1.7em;
-                margin-bottom: 0;
-            }
+        .chat-header h1 {
+            color: #ec0000; /* Vermelho Santander */
+            font-size: 1.8em;
+            margin: 0;
+        }
 
-            .chat-header p {
-                color: #ccc;
-                font-size: 0.9em;
-                margin-top: 5px;
-            }
+        .chat-header p {
+            color: #aaa;
+            margin: 4px 0 0;
+            font-size: 0.9em;
+        }
 
-            /* Rodapé estilo aviso fixo abaixo da área de mensagens */
-            .disclaimer {
-                font-size: 0.9em;
-                color: #888;
-                text-align: center;
-                padding: 15px 10px;
-                border-top: 1px solid #444;
-                margin-top: 20px;
-            }
+        /* Espaço extra para o conteúdo não ficar embaixo do cabeçalho */
+        .block-container {
+            padding-top: 100px !important;
+            padding-bottom: 100px !important;
+        }
 
-            /* Espaço entre entrada e rodapé */
-            .block-container {
-                padding-bottom: 80px !important;
-            }
+        /* Rodapé com aviso estilo ChatGPT */
+        .disclaimer {
+            font-size: 0.85em;
+            color: #999;
+            text-align: center;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+            margin-top: 40px;
+        }
 
-            /* Deixe a barra de mensagem visível sempre */
-            section.main > div:has(div[data-testid="stChatInput"]) {
-                padding-bottom: 0 !important;
-            }
-        </style>
-    """, unsafe_allow_html=True)
+        /* Caixa de entrada ajustada para não cobrir rodapé */
+        section.main > div:has(div[data-testid="stChatInput"]) {
+            margin-bottom: 30px;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 
     # 🎯 Cabeçalho fixo
     st.markdown("""
-        <div class='chat-header'>
-            <h1>🤖 <span style="color: #ff4b4b;">SantChat</span></h1>
-            <p>IA interna para colaboradores do Santander</p>
-        </div>
-    """, unsafe_allow_html=True)
+    <div class='chat-header'>
+        <h1>🤖 <strong>SantChat</strong></h1>
+        <p>IA interna para colaboradores do Santander</p>
+    </div>
+""", unsafe_allow_html=True)
+
 
 
     # 🔒 Validação da senha (opcional)
@@ -261,10 +267,9 @@ def main():
 # ⚠️ Rodapé 
 st.markdown("""
     <div class="disclaimer">
-         ⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.
+        ⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.
     </div>
 """, unsafe_allow_html=True)
-
 
 # 🟢 Inicia app
 if __name__ == "__main__":
