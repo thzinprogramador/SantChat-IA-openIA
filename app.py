@@ -14,7 +14,7 @@ st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
 
 # --- Firebase Initialization ---
 if not firebase_admin._apps:
-    firebase_key = {k: (v.replace("\\n", "\n") if k == "private_key" else v)
+    firebase_key = {k: (v.replace("\n", "\n") if k == "private_key" else v)
                     for k, v in st.secrets["FIREBASE_KEY"].items()}
     firebase_admin.initialize_app(credentials.Certificate(firebase_key),
                                   {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]})
@@ -82,7 +82,7 @@ def gerar_resposta(memoria, prompt):
     if memoria:
         msgs.append({"role": "system", "content": "\n".join(memoria)})
     msgs.append({"role": "user", "content": prompt})
-    
+
     try:
         resp = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
@@ -91,20 +91,20 @@ def gerar_resposta(memoria, prompt):
                 "Content-Type": "application/json"
             },
             json={
-                "model": "deepseek/deepseek-r1-0528:free",  # Troquei o modelo
+                "model": "deepseek/deepseek-r1-0528:free",
                 "messages": msgs,
                 "max_tokens": 500,
                 "temperature": 0.7
             },
             timeout=15
         )
-        
+
         if resp.status_code != 200:
             return f"Erro na API OpenRouter: {resp.status_code} - {resp.text}"
-        
+
         data = resp.json()
-        st.write("Resposta bruta da API:", data)  # DEBUG LOG
-        
+        st.write("Resposta bruta da API:", data)
+
         if "choices" in data and data["choices"]:
             return data["choices"][0]["message"]["content"].strip()
         else:
@@ -112,8 +112,6 @@ def gerar_resposta(memoria, prompt):
 
     except Exception as e:
         return f"⚠️ Erro ao gerar resposta: {str(e)}"
-
-
 
 # --- Interface ---
 def main():
@@ -148,7 +146,7 @@ def main():
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🔐 Entrar com Google"):
-                token = None  # substitua se usar login_button
+                token = None
                 if token:
                     user_info = requests.get(
                         f"https://{st.secrets['AUTH0']['DOMAIN']}/userinfo",
@@ -165,7 +163,6 @@ def main():
                 st.rerun()
         st.stop()
 
-    # --- Inicialização de estado ---
     if "memoria" not in st.session_state:
         st.session_state.memoria = carregar_memoria()
     if "historico" not in st.session_state:
@@ -173,14 +170,12 @@ def main():
     if "ultima_interacao" not in st.session_state:
         st.session_state.ultima_interacao = datetime.now()
 
-    # --- Timeout de inatividade ---
     if "ultima_interacao" in st.session_state and datetime.now() - st.session_state.ultima_interacao > timedelta(hours=2):
         user_id = st.session_state.get("user_id", f"guest-{uuid.uuid4().hex[:6]}")
         salvar_historico(user_id, st.session_state.historico)
         st.session_state.historico = []
         st.session_state.ultima_interacao = datetime.now()
 
-    # --- Cabeçalho e menu lateral ---
     st.markdown("<div class='chat-header'><h1>🤖 SantChat</h1><p>IA interna para colaboradores do Santander</p></div>", unsafe_allow_html=True)
 
     user_id = obter_id_usuario()
