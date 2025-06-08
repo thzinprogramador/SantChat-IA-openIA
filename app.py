@@ -165,19 +165,32 @@ def main():
 
             # 🎯 Botões para a resposta da IA
             if msg["origem"] == "assistant":
-             # 🎯 Linha de botões estilizada
-                st.markdown(f"""
-                <div style="display: flex; gap: 12px; margin: 6px 0;">
-                    <button onclick="navigator.clipboard.writeText(`{msg['texto']}`)" style="padding:6px 10px;border:1px solid #444;background:#222;color:#ccc;border-radius:5px;">📋</button>
-                    <button disabled style="padding:6px 10px;border:1px solid #444;background:#222;color:#777;border-radius:5px;">🔈</button>
-                    <button style="padding:6px 10px;border:1px solid #444;background:#222;color:#ccc;border-radius:5px;">👍</button>
-                    <button style="padding:6px 10px;border:1px solid #444;background:#222;color:#ccc;border-radius:5px;">👎</button>
-                    <button onclick="document.getElementById('fb_{i}').style.display='block';" style="padding:6px 10px;border:1px solid #444;background:#222;color:#ccc;border-radius:5px;">💬</button>
-                </div>
-                <div id="fb_{i}" style="display:none; margin-top: 5px;">
-                    <input type="text" name="feedback" placeholder="Digite seu feedback" style="width: 70%; padding: 5px; margin-right: 5px; border-radius: 4px; border:1px solid #444;">
-                </div>
-                """, unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 1, 1])
+
+    with col1:
+        if st.button("👍", key=f"like_{i}", help="Gostei"):
+            pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+            salvar_feedback(user_id, pergunta, msg["texto"], "👍 Gostei")
+            st.success("✅ Avaliação positiva enviada!")
+
+    with col2:
+        if st.button("👎", key=f"dislike_{i}", help="Não gostei"):
+            pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+            salvar_feedback(user_id, pergunta, msg["texto"], "👎 Não gostei")
+            st.warning("⚠️ Avaliação negativa registrada.")
+
+    with col3:
+        if st.button("💬", key=f"fb_btn_{i}", help="Enviar feedback"):
+            st.session_state[f"fb_{i}"] = True
+
+    if st.session_state.get(f"fb_{i}"):
+        feedback = st.text_input("Seu feedback:", key=f"fb_text_{i}")
+        if st.button("Enviar feedback", key=f"send_fb_{i}"):
+            pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+            salvar_feedback(user_id, pergunta, msg["texto"], feedback)
+            st.success("✅ Feedback enviado com sucesso!")
+            st.session_state[f"fb_{i}"] = False
+
 
 
                 # 💬 Campo de feedback (expande ao clicar)
