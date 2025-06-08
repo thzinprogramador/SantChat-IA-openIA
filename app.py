@@ -201,6 +201,15 @@ def main():
                     st.success("✅ Feedback enviado com sucesso!")
                     st.session_state[f"fb_{i}"] = False
 
+# 💬 Entrada do usuário
+    entrada = st.chat_input("Digite sua mensagem")
+    if entrada:
+        st.session_state.ultima_interacao = datetime.now()
+        st.session_state.historico.append({"origem": "user", "texto": entrada})
+        resposta = gerar_resposta(st.session_state.memoria, entrada)
+        st.session_state.historico.append({"origem": "assistant", "texto": resposta})
+        st.rerun()
+
     # --- Novo controle de login ---
     if "user_type" not in st.session_state:
         st.session_state["user_type"] = "guest"
@@ -241,14 +250,7 @@ def main():
         st.markdown(f"**{tipo}:** {msg['texto']}")
 
 
-        # 💬 Entrada do usuário
-        entrada = st.chat_input("Digite sua mensagem")
-        if entrada:
-            st.session_state.ultima_interacao = datetime.now()
-            st.session_state.historico.append({"origem": "user", "texto": entrada})
-            resposta = gerar_resposta(st.session_state.memoria, entrada)
-            st.session_state.historico.append({"origem": "assistant", "texto": resposta})
-            st.rerun()
+#
 
         elif choice == "Memória IA":
             st.header("🧠 Memória Global da IA")
