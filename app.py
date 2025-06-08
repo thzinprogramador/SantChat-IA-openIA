@@ -63,10 +63,14 @@ def gerar_resposta(memoria, prompt):
     return resp.json()["choices"][0]["message"]["content"].strip()
 
 def salvar_feedback(user_id, pergunta, resposta, comentario):
-   (uid,) = (user_id,)
-    ref = db.reference(f"logs/feedbacks/{uid}")
+    ref = db.reference(f"logs/feedbacks/{user_id}")
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    ref.update({ts: json.dumps({"pergunta":pergunta,"resposta":resposta,"feedback":comentario})})
+    ref.update({ts: json.dumps({
+        "pergunta": pergunta,
+        "resposta": resposta,
+        "feedback": comentario
+    })})
+
 
 def desbloquear_memoria_e_feed(user_id):
     return user_id in DEVS
