@@ -145,7 +145,7 @@ def main():
         salvar_log(ip_usuario, f"Usuário: {entrada_usuario}")
 
         # 🧠 Comando especial para aprendizado global
-        if entrada_usuario.lower().startswith("/sntevksi"):
+if entrada_usuario.lower().startswith("/sntevksi"):
     novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
     if novo_conhecimento:
         try:
@@ -162,7 +162,6 @@ def main():
         resposta = "⚠️ Por favor, escreva algo após o comando /sntevksi."
 else:
     resposta = gerar_resposta(st.session_state.memoria, entrada_usuario)
-
 
 
         # 🧾 Atualiza histórico e log
