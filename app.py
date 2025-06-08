@@ -201,7 +201,7 @@ def main():
                         st.session_state[f"fb_{i}"] = False
 
         # 💬 Entrada do usuário
-                entrada = st.chat_input("Digite sua mensagem")
+        entrada = st.chat_input("Digite sua mensagem")
         if entrada:
             st.session_state.ultima_interacao = datetime.now()
 
