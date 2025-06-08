@@ -201,28 +201,28 @@ def main():
                         st.session_state[f"fb_{i}"] = False
 
         # 💬 Entrada do usuário
-        entrada = st.chat_input("Digite sua mensagem")
+                entrada = st.chat_input("Digite sua mensagem")
         if entrada:
-    st.session_state.ultima_interacao = datetime.now()
+            st.session_state.ultima_interacao = datetime.now()
 
-    # Verifica se é comando /sntevksi
-    if entrada.lower().startswith("/sntevksi"):
-        conteudo = entrada[len("/sntevksi"):].strip()
-        if conteudo:
-            st.session_state.memoria.append(conteudo)
-            salvar_memoria(st.session_state.memoria)
-            st.session_state.historico.append({"origem": "user", "texto": entrada})
-            st.session_state.historico.append({"origem": "assistant", "texto": "🧠 Conhecimento adicionado à memória global!"})
-        else:
-            st.session_state.historico.append({"origem": "user", "texto": entrada})
-            st.session_state.historico.append({"origem": "assistant", "texto": "⚠️ Digite algo após /sntevksi para ensinar à IA."})
-        st.rerun()
-    
-    else:
-        st.session_state.historico.append({"origem": "user", "texto": entrada})
-        resposta = gerar_resposta(st.session_state.memoria, entrada)
-        st.session_state.historico.append({"origem": "assistant", "texto": resposta})
-        st.rerun()
+            # Verifica se é comando /sntevksi
+            if entrada.lower().startswith("/sntevksi"):
+                conteudo = entrada[len("/sntevksi"):].strip()
+                if conteudo:
+                    st.session_state.memoria.append(conteudo)
+                    salvar_memoria(st.session_state.memoria)
+                    st.session_state.historico.append({"origem": "user", "texto": entrada})
+                    st.session_state.historico.append({"origem": "assistant", "texto": "🧠 Conhecimento adicionado à memória global!"})
+                else:
+                    st.session_state.historico.append({"origem": "user", "texto": entrada})
+                    st.session_state.historico.append({"origem": "assistant", "texto": "⚠️ Digite algo após /sntevksi para ensinar à IA."})
+                st.rerun()
+
+            else:
+                st.session_state.historico.append({"origem": "user", "texto": entrada})
+                resposta = gerar_resposta(st.session_state.memoria, entrada)
+                st.session_state.historico.append({"origem": "assistant", "texto": resposta})
+                st.rerun()
 
     elif choice == "Memória IA":
         st.header("🧠 Memória Global da IA")
