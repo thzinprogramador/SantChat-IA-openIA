@@ -26,8 +26,7 @@ st.write("CLIENT_ID:", st.secrets["AUTH0"].get("CLIENT_ID"))
 st.write("DOMAIN:", st.secrets["AUTH0"].get("DOMAIN"))
 
 
-
-auth0_secrets = st.secrets.get("AUTH0", {})
+auth0_secrets = st.secrets["AUTH0"]
 
 auth0 = OAuth2Component(
     client_id=auth0_secrets.get("CLIENT_ID"),
