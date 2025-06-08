@@ -25,14 +25,10 @@ st.write("CLIENT_ID:", st.secrets.get("AUTH0_CLIENT_ID"))
 st.write("DOMAIN:", st.secrets.get("AUTH0_DOMAIN"))
 
 # Autenticador google (por enquanto)
-auth0 = OAuth2Component(
-    client_id=st.secrets["AUTH0_CLIENT_ID"],
-    client_secret=st.secrets["AUTH0_CLIENT_SECRET"],
-    authorize_url=f"https://{st.secrets['AUTH0_DOMAIN']}/authorize",
-    token_url=f"https://{st.secrets['AUTH0_DOMAIN']}/oauth/token",
-    redirect_uri=st.secrets["AUTH0_REDIRECT_URI"],
-    scope="openid profile email",
-    name="auth0"
+auth0_response = login_button(
+    client_id=st.secrets["AUTH0"]["CLIENT_ID"],
+    domain=st.secrets["AUTH0"]["DOMAIN"],
+    redirect_uri=st.secrets["AUTH0"]["REDIRECT_URI"]
 )
 
 # --- API Key OpenRouter ---
