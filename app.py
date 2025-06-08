@@ -33,7 +33,7 @@ if not firebase_admin._apps:
 
 
 # 🔑 Configurações de segurança e API
-OPENROUTER_KEY = st.secrets.get("OPENROUTER_KEY", "")
+OPENROUTER_KEY = st.secrets["OPENROUTER_KEY"]
 SENHA_ATIVADA = str(st.secrets.get("SENHA_ATIVADA", "false")).lower() == "true"
 SENHA_PADRAO = st.secrets.get("SENHA_PADRAO", "1234")
 
@@ -118,10 +118,12 @@ def gerar_resposta(memoria, prompt):
         return f"Erro na API: {str(e)}"
 
 # 🚀 Interface principal
-def main():
-    st.write("🔑 Chave OpenRouter:", OPENROUTER_KEY[:10] + "..." if OPENROUTER_KEY else "⚠️ NÃO CARREGADA")
+def main():   
     st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
     st.markdown("<h1 style='text-align: center;'>SantChat - IA Interna Santander</h1>", unsafe_allow_html=True)
+
+    # 🔑 Validaçao de key
+    st.write("🔑 Chave OpenRouter:", OPENROUTER_KEY[:10] + "..." if OPENROUTER_KEY else "⚠️ NÃO CARREGADA")
 
     # 🔒 Validação da senha (opcional)
     if SENHA_ATIVADA:
