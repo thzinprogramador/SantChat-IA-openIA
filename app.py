@@ -85,6 +85,20 @@ def main():
     section.main > div:has(div[data-testid="stChatInput"]){padding-bottom:80px!important;}
     .msg-user{background:#333;color:#fff;padding:8px;border-radius:8px 0px 8px 8px;float:right;clear:both;max-width:80%;}
     .msg-assistant{background:#222;color:#eee;padding:8px;border-radius:0px 8px 8px 8px;float:left;clear:both;max-width:80%;}
+    button[kind="secondary"] {
+    background-color: #222 !important;
+    color: #ccc !important;
+    border-radius: 5px !important;
+    padding: 4px 10px !important;
+    margin: 2px !important;
+    font-size: 18px !important;
+    border: 1px solid #444 !important;
+    transition: background 0.2s ease;
+    }
+    button[kind="secondary"]:hover {
+    background-color: #333 !important;
+    color: #fff !important;
+    }
     </style>""", unsafe_allow_html=True)
 
     st.markdown("<div class='chat-header'><h1>🤖 SantChat</h1></div>", unsafe_allow_html=True)
@@ -110,6 +124,33 @@ def main():
             st.session_state.historico.append({"origem":"user","texto":entrada})
             respuesta = gerar_resposta(st.session_state.memoria, entrada)
             st.session_state.historico.append({"origem":"assistant","texto":respuesta})
+
+            # Mostrar resposta com botões
+with st.container():
+    st.markdown(f"<div class='msg-assistant'>{resposta}</div>", unsafe_allow_html=True)
+
+    # Botões horizontais
+    col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
+    with col1:
+        st.button("📋", key=f"copiar_{len(st.session_state.historico)}", help="Copiar resposta")
+    with col2:
+        st.button("🔈", key=f"voz_{len(st.session_state.historico)}", help="Ler em voz alta (futuro)")
+    with col3:
+        st.button("👍", key=f"curtir_{len(st.session_state.historico)}", help="Gostei")
+    with col4:
+        st.button("👎", key=f"nao_gostei_{len(st.session_state.historico)}", help="Não gostei")
+    with col5:
+        if st.button("💬", key=f"fb_btn_{len(st.session_state.historico)}", help="Enviar feedback"):
+            st.session_state[f"feedback_{len(st.session_state.historico)}"] = True
+
+    # Caixa de feedback (abre apenas se clicado)
+    if st.session_state.get(f"feedback_{len(st.session_state.historico)}"):
+        feedback_text = st.text_input("Seu feedback:", key=f"feedback_text_{len(st.session_state.historico)}")
+        if st.button("Enviar feedback", key=f"enviar_fb_{len(st.session_state.historico)}"):
+            salvar_feedback(user_id, entrada_usuario, resposta, feedback_text)
+            st.success("✅ Feedback enviado com sucesso!")
+            st.session_state[f"feedback_{len(st.session_state.historico)}"] = False
+
 
             # Botões
             st.write(f"{respuesta}")
