@@ -133,13 +133,44 @@ def main():
         tipo = "Usuário" if msg["origem"] == "user" else "SantChat"
         st.markdown(f"**{tipo}:** {msg['texto']}")
 
-    entrada = st.chat_input("Digite sua mensagem")
-    if entrada:
-        st.session_state.ultima_interacao = datetime.now()
-        st.session_state.historico.append({"origem": "user", "texto": entrada})
-        resposta = gerar_resposta(st.session_state.memoria, entrada)
-        st.session_state.historico.append({"origem": "assistant", "texto": resposta})
-        st.rerun()
+            # 💬 Entrada do usuário
+        entrada = st.chat_input("Digite sua mensagem")
+        if entrada:
+            st.session_state.ultima_interacao = datetime.now()
+            st.session_state.historico.append({"origem": "user", "texto": entrada})
+            resposta = gerar_resposta(st.session_state.memoria, entrada)
+            st.session_state.historico.append({"origem": "assistant", "texto": resposta})
+            st.rerun()
+
+    elif choice == "Memória IA":
+        st.header("🧠 Memória Global da IA")
+        memoria = carregar_memoria()
+        st.write(memoria)
+
+    elif choice == "Feedbacks":
+        st.header("📊 Feedbacks Recebidos")
+        data = db.reference(f"logs/feedbacks/{user_id}").get() or {}
+        for k, v in data.items():
+            st.write(json.loads(v))
+
+    elif choice == "Configurações":
+        st.header("⚙️ Configurações")
+        if st.button("Logout"):
+            st.session_state.clear()
+            st.experimental_rerun()
+
+
+            # 🧠 Comando de aprendizado global
+        if entrada.lower().startswith("/sntevksi"):
+            conteudo = entrada[len("/sntevksi"):].strip()
+            if conteudo:
+                st.session_state.memoria.append(conteudo)
+                salvar_memoria(st.session_state.memoria)
+                st.success("🧠 Conhecimento adicionado à memória global!")
+                return
+            else:
+                st.warning("⚠️ Digite algo após /sntevksi para ensinar à IA.")
+                return
 
 if __name__ == "__main__":
     main()
