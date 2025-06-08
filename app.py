@@ -146,36 +146,42 @@ def main():
     }
     </style>""", unsafe_allow_html=True)
 
-        # ⏱ Timeout de inatividade (2h)
-    if datetime.now() - st.session_state.ultima_interacao > timedelta(hours=2):
-        # 🆕 Apenas salva histórico se houver e limpa depois
-        if st.session_state.historico:
-            salvar_historico(user_id, st.session_state.historico)  # 🆕 Salva histórico
-            st.session_state.historico = []  # 🆕 Limpa histórico após salvar
-        st.session_state.ultima_interacao = datetime.now()
-
-# --- Login ou acesso anônimo ---
-    if "auth_mode" not in st.session_state:
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔐 Entrar com Google"):
-                # 🆕 Login Auth0 correto com requests
-                token = auth0_response
-                if token:
-                    user_info = requests.get(
-                        f"https://{st.secrets['AUTH0']['DOMAIN']}/userinfo",  # 🆕 corrigido AUTH0
-                        headers={"Authorization": f"Bearer {token['access_token']}"}
-                    ).json()
-                    st.session_state["auth_mode"] = "google"
-                    st.session_state["user_email"] = user_info["email"]
-                    st.session_state["user_id"] = user_info["email"]
-                    st.rerun()
-        with col2:
-            if st.button("🚪 Continuar como convidado"):
-                st.session_state["auth_mode"] = "guest"
-                st.session_state["user_id"] = f"guest-{uuid.uuid4().hex[:6]}"
+    # --- Login ou acesso anônimo ---
+if "auth_mode" not in st.session_state:
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔐 Entrar com Google"):
+            token = auth0_response
+            if token:
+                user_info = requests.get(
+                    f"https://{st.secrets['AUTH0']['DOMAIN']}/userinfo",
+                    headers={"Authorization": f"Bearer {token['access_token']}"}
+                ).json()
+                st.session_state["auth_mode"] = "google"
+                st.session_state["user_email"] = user_info["email"]
+                st.session_state["user_id"] = user_info["email"]
                 st.rerun()
-        st.stop()
+    with col2:
+        if st.button("🚪 Continuar como convidado"):
+            st.session_state["auth_mode"] = "guest"
+            st.session_state["user_id"] = f"guest-{uuid.uuid4().hex[:6]}"
+            st.rerun()
+    st.stop()
+
+# ✅ Inicializa variáveis de estado depois do login
+if "memoria" not in st.session_state:
+    st.session_state.memoria = carregar_memoria()
+if "historico" not in st.session_state:
+    st.session_state.historico = []
+if "ultima_interacao" not in st.session_state:
+    st.session_state.ultima_interacao = datetime.now()
+
+# ⏱ Timeout de inatividade (2h)
+if datetime.now() - st.session_state.ultima_interacao > timedelta(hours=2):
+    if st.session_state.historico:
+        salvar_historico(user_id, st.session_state.historico)
+        st.session_state.historico = []
+    st.session_state.ultima_interacao = datetime.now()
 
     # Define user_id mesmo se já estiver autenticado
     user_id = st.session_state.get("user_id", f"guest-{uuid.uuid4().hex[:6]}")
@@ -189,21 +195,13 @@ def main():
     is_dev = desbloquear_memoria_e_feed(user_id)
 
     # 🧠 Inicializa estados
-    if "memoria" not in st.session_state:
-        st.session_state.memoria = carregar_memoria()
-    if "historico" not in st.session_state:
-        st.session_state.historico = []
-    if "ultima_interacao" not in st.session_state:
-        st.session_state.ultima_interacao = datetime.now()
+    #if "memoria" not in st.session_state:
+        #st.session_state.memoria = carregar_memoria()
+    #if "historico" not in st.session_state:
+        #st.session_state.historico = []
+    #if "ultima_interacao" not in st.session_state:
+        #st.session_state.ultima_interacao = datetime.now()
 
-    # ⏱ Timeout de inatividade (2h)
-    if datetime.now() - st.session_state.ultima_interacao > timedelta(hours=2):
-        if st.session_state.historico:
-            salvar_historico(user_id, st.session_state.historico)
-            st.session_state.historico = []
-        st.session_state.ultima_interacao = datetime.now()
-        print("Salvando histórico por timeout")
-        salvar_historico(user_id, st.session_state.historico)
 
     # 📂 Menu lateral (com base no tipo de usuário)
     menu = ["Chat"]
