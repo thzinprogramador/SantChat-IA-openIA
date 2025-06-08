@@ -6,9 +6,8 @@ import openai
 import socket
 import requests
 
-# ⬇️ Este deve vir aqui (antes de qualquer `st.` abaixo)
+# ✅ Precisa vir ANTES de qualquer outro st.*
 st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
-
 
 # 🔧 Firebase
 import firebase_admin
@@ -132,73 +131,58 @@ def gerar_resposta(memoria, prompt):
 
 # 🚀 Interface principal
 def main():
-        # 🎨 Tema escuro + estilo fixo
+    # 🎨 Estilo fixo e tema escuro
     st.markdown("""
-    <style>
-        /* Redefine fundo e fonte */
-        html, body {
-            background-color: #111111;
-            color: #ffffff;
-            font-family: 'Segoe UI', sans-serif;
-        }
+        <style>
+            html, body {
+                background-color: #111111;
+                color: #ffffff;
+                font-family: 'Segoe UI', sans-serif;
+            }
 
-        /* Cabeçalho fixo no topo real */
-        .chat-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background-color: #111111;
-            padding: 16px 0 8px 0;
-            border-bottom: 1px solid #444;
-            z-index: 1000;
-        }
+            .chat-header {
+                position: sticky;
+                top: 0;
+                background-color: #111111;
+                padding: 20px 0 10px 0;
+                text-align: center;
+                z-index: 999;
+                border-bottom: 1px solid #333;
+            }
 
-        .chat-header h1 {
-            color: #ec0000; /* Vermelho Santander */
-            font-size: 1.8em;
-            margin: 0;
-        }
+            .chat-header h1 {
+                color: #ec0000;
+                margin-bottom: 5px;
+            }
 
-        .chat-header p {
-            color: #aaa;
-            margin: 4px 0 0;
-            font-size: 0.9em;
-        }
+            .chat-header p {
+                color: #ccc;
+                margin: 0;
+                font-size: 0.9em;
+            }
 
-        /* Espaço extra para o conteúdo não ficar embaixo do cabeçalho */
-        .block-container {
-            padding-top: 100px !important;
-            padding-bottom: 100px !important;
-        }
+            .disclaimer {
+                font-size: 0.85em;
+                color: #888;
+                text-align: center;
+                padding-top: 25px;
+                margin-top: 20px;
+                border-top: 1px solid #444;
+            }
 
-        /* Rodapé com aviso estilo ChatGPT */
-        .disclaimer {
-            font-size: 0.85em;
-            color: #999;
-            text-align: center;
-            padding-top: 25px;
-            border-top: 1px solid #333;
-            margin-top: 40px;
-        }
+            section.main > div:has(div[data-testid="stChatInput"]) {
+                padding-bottom: 60px !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-        /* Caixa de entrada ajustada para não cobrir rodapé */
-        section.main > div:has(div[data-testid="stChatInput"]) {
-            margin-bottom: 30px;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-
-    # 🎯 Cabeçalho fixo
+    # 🎯 Cabeçalho
     st.markdown("""
-    <div class='chat-header'>
-        <h1>🤖 <strong>SantChat</strong></h1>
-        <p>IA interna para colaboradores do Santander</p>
-    </div>
-""", unsafe_allow_html=True)
-
-
+        <div class='chat-header'>
+            <h1>🤖 <strong>SantChat</strong></h1>
+            <p>IA interna para colaboradores do Santander</p>
+        </div>
+    """, unsafe_allow_html=True)
 
     # 🔒 Validação da senha (opcional)
     if SENHA_ATIVADA:
@@ -236,16 +220,12 @@ def main():
     if entrada_usuario:
         salvar_log(ip_usuario, f"Usuário: {entrada_usuario}")
 
-        # 🧠 Comando especial para aprendizado global
         if entrada_usuario.lower().startswith("/sntevksi"):
             novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
             if novo_conhecimento:
                 try:
                     st.session_state.memoria.append(novo_conhecimento)
-                    st.write("🧠 Novo conhecimento adicionado à memória:", novo_conhecimento)
                     salvar_memoria(st.session_state.memoria)
-                    memoria_check = carregar_memoria()
-                    st.write("📦 Memória após salvar:", memoria_check)
                     resposta = "✅ Conhecimento adicionado à memória global!"
                 except Exception as e:
                     st.error(f"❌ Erro ao salvar memória: {e}")
@@ -255,7 +235,6 @@ def main():
         else:
             resposta = gerar_resposta(st.session_state.memoria, entrada_usuario)
 
-        # 🧾 Atualiza histórico e log
         st.session_state.historico.append({"user": entrada_usuario, "bot": resposta})
         salvar_log(ip_usuario, f"Bot: {resposta}")
 
@@ -264,13 +243,14 @@ def main():
         with st.chat_message("assistant"):
             st.markdown(resposta)
 
-# ⚠️ Rodapé 
-st.markdown("""
-    <div class="disclaimer">
-        ⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.
-    </div>
-""", unsafe_allow_html=True)
+    # ⚠️ Rodapé fixo
+    st.markdown("""
+        <div class="disclaimer">
+            ⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.
+        </div>
+    """, unsafe_allow_html=True)
 
-# 🟢 Inicia app
+# 🟢 Executa app
 if __name__ == "__main__":
     main()
+
