@@ -91,7 +91,7 @@ def gerar_resposta(memoria, prompt):
                 "Content-Type": "application/json"
             },
             json={
-                "model": "openchat/openchat-7b:free",  # Troquei o modelo
+                "model": "deepseek/deepseek-r1-0528:free",  # Troquei o modelo
                 "messages": msgs,
                 "max_tokens": 500,
                 "temperature": 0.7
