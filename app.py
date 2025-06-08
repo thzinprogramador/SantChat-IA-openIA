@@ -135,6 +135,50 @@ def main():
     st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
     st.markdown("<h1 style='text-align: center;'>SantChat - IA Interna Santander</h1>", unsafe_allow_html=True)
 
+#  Estilo responsivo e visual moderno
+st.markdown("""
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .stChatMessage {
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .chat-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .chat-header h1 {
+            color: #d92525;
+            font-size: 2em;
+        }
+        .chat-header p {
+            color: #555;
+            margin-top: -10px;
+            font-size: 1em;
+        }
+        .disclaimer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# 🎯 Cabeçalho com título e subtítulo
+st.markdown("""
+    <div class='chat-header'>
+        <h1>🤖 SantChat</h1>
+        <p>IA interna para colaboradores do Santander</p>
+    </div>
+""", unsafe_allow_html=True)
+
+
     # 🔑 Validaçao de key
     
 
