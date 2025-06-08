@@ -182,8 +182,9 @@ st.markdown("""
     # 🔑 Validaçao de key
     
 
-    # 🔒 Validação da senha (opcional)
-    if SENHA_ATIVADA:
+    
+# 🔒 Validação da senha (opcional)
+if SENHA_ATIVADA:
         if "senha_valida" not in st.session_state:
             senha_input = st.text_input("Digite a senha:", type="password")
             if st.button("Entrar"):
