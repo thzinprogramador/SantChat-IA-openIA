@@ -95,7 +95,13 @@ def main():
     # 🎨 Estilo visual (tema escuro + layout fixo)
     st.markdown("""<style>
     body { background:#111; color:#eee; }
-    .chat-header { position:fixed; top:0; width:100%; padding:10px; text-align:center; background:#111; z-index:999; }
+    .chat-header {
+    position: sticky;  /* em vez de fixed */
+    top: 0;
+    background: #111;
+    z-index: 1000;
+    }
+
     .chat-header h1 { color:#ec0000; }
     .disclaimer { position:fixed; bottom:0; width:100%; text-align:center; color:#888; padding:10px; background:#111; }
     section.main > div:has(div[data-testid="stChatInput"]) {
