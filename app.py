@@ -67,9 +67,7 @@ def salvar_erro(erro, contexto="geral"):
         ref = db.reference(f"logs/erros/{contexto}")
         ref.update({agora: str(erro)})
     except Exception as e:
-    salvar_erro(e, contexto="resposta_ia")  # ou outro nome como "firebase", "memoria", etc.
-    st.error("❌ Erro inesperado. Detalhes foram registrados.")
-
+        print(f"Falha ao salvar log de erro: {e}")
 
 
 # 📝 Log por IP
@@ -108,7 +106,7 @@ def gerar_resposta(memoria, prompt):
             headers={
                 "Authorization": f"Bearer {OPENROUTER_KEY}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://santchat-openia.streamlit.app/",  # link real do seu app
+                "HTTP-Referer": "https://santchat.streamlit.app/",
                 "X-Title": "SantChat",
             },
             json={
@@ -120,13 +118,17 @@ def gerar_resposta(memoria, prompt):
         )
 
         if response.status_code != 200:
-            return f"Erro HTTP {response.status_code}: {response.text}"
+            erro_msg = f"Erro HTTP {response.status_code}: {response.text}"
+            salvar_erro(erro_msg, contexto="resposta_ia")
+            return erro_msg
 
         data = response.json()
         return data["choices"][0]["message"]["content"].strip()
 
     except Exception as e:
+        salvar_erro(e, contexto="resposta_ia")
         return f"Erro na API: {str(e)}"
+
 
 # 🚀 Interface principal
 def main():   
