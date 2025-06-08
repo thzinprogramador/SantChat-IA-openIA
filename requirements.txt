@@ -1,5 +1,5 @@
 streamlit
-streamlit-oauth
+streamlit-auth0
 firebase-admin==6.4.0
 openai
 requests
