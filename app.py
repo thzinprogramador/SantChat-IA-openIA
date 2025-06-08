@@ -54,8 +54,8 @@ def salvar_log(ip, conteudo):
         ref = db.reference(f"logs/{ip.replace(':', '_')}")
         ref.update({agora: conteudo})
     except Exception as e:
-    st.error(f"Erro ao salvar log: {e}")
-    print(f"Erro ao salvar log: {e}")   
+        st.error(f"Erro ao salvar log: {e}")
+        print(f"Erro ao salvar log: {e}")   
 
 # 🌐 IP do usuário
 def obter_ip():
