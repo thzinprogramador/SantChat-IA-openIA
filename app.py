@@ -20,11 +20,11 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(credentials.Certificate(firebase_key),
                                   {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]})
 
-auth0_response = login_button(
-    client_id=st.secrets["AUTH0"].get("CLIENT_ID"),
-    domain=st.secrets["AUTH0"].get("DOMAIN"),
-    redirect_uri=st.secrets["AUTH0"].get("REDIRECT_URI")
-)
+# auth0_response = login_button(
+    #client_id=st.secrets["AUTH0"].get("CLIENT_ID"),
+    #domain=st.secrets["AUTH0"].get("DOMAIN"),
+    #redirect_uri=st.secrets["AUTH0"].get("REDIRECT_URI")
+#)
 
 # Autenticador google (por enquanto)
 
