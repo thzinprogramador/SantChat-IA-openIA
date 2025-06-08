@@ -369,7 +369,6 @@ def render_header():
     with col1:
         st.markdown(f"""
         <div class="logo">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Santander_Bank_logo.svg/1200px-Santander_Bank_logo.svg.png" alt="Santander Logo">
             SantChat
         </div>
         """, unsafe_allow_html=True)
