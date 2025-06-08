@@ -23,9 +23,9 @@ if not firebase_admin._apps:
 st.write(type(st.secrets["AUTH0"]))
 
 auth0_response = login_button(
-    client_id=st.secrets["AUTH0"]["CLIENT_ID"],
-    domain=st.secrets["AUTH0"]["DOMAIN"],
-    redirect_uri=st.secrets["AUTH0"]["REDIRECT_URI"]
+    client_id=st.secrets.AUTH0.CLIENT_ID,
+    domain=st.secrets.AUTH0.DOMAIN,
+    redirect_uri=st.secrets.AUTH0.REDIRECT_URI
 )
 
 # Autenticador google (por enquanto)
