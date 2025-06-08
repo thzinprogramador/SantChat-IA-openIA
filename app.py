@@ -31,6 +31,9 @@ def carregar_memoria():
     except:
         return []
 
+def salvar_memoria(mem):
+    db.reference("memoria_global").set(mem)
+
 def salvar_feedback(user_id, pergunta, resposta, comentario):
     ref = db.reference(f"logs/feedbacks/{user_id}")
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -244,35 +247,35 @@ def main():
             st.session_state.historico.append({"origem": "assistant", "texto": resposta})
             st.rerun()
 
-    elif choice == "Memória IA":
-        st.header("🧠 Memória Global da IA")
-        memoria = carregar_memoria()
-        st.write(memoria)
+        elif choice == "Memória IA":
+            st.header("🧠 Memória Global da IA")
+            memoria = carregar_memoria()
+            st.write(memoria)
 
-    elif choice == "Feedbacks":
-        st.header("📊 Feedbacks Recebidos")
-        data = db.reference(f"logs/feedbacks/{user_id}").get() or {}
-        for k, v in data.items():
-            st.write(json.loads(v))
+        elif choice == "Feedbacks":
+            st.header("📊 Feedbacks Recebidos")
+            data = db.reference(f"logs/feedbacks/{user_id}").get() or {}
+            for k, v in data.items():
+                st.write(json.loads(v))
 
-    elif choice == "Configurações":
-        st.header("⚙️ Configurações")
-        if st.button("Logout"):
-            st.session_state.clear()
-            st.experimental_rerun()
+        elif choice == "Configurações":
+            st.header("⚙️ Configurações")
+            if st.button("Logout"):
+                st.session_state.clear()
+                st.experimental_rerun()
 
 
             # 🧠 Comando de aprendizado global
-    if entrada.lower().startswith("/sntevksi"):
-        conteudo = entrada[len("/sntevksi"):].strip()
-        if conteudo:
-            st.session_state.memoria.append(conteudo)
-            salvar_memoria(st.session_state.memoria)
-            st.success("🧠 Conhecimento adicionado à memória global!")
+        if entrada.lower().startswith("/sntevksi"):
+            conteudo = entrada[len("/sntevksi"):].strip()
+            if conteudo:
+                st.session_state.memoria.append(conteudo)
+                salvar_memoria(st.session_state.memoria)
+                st.success("🧠 Conhecimento adicionado à memória global!")
+                return
+            else:
+                st.warning("⚠️ Digite algo após /sntevksi para ensinar à IA.")
             return
-        else:
-            st.warning("⚠️ Digite algo após /sntevksi para ensinar à IA.")
-        return
 
 if __name__ == "__main__":
     main()
