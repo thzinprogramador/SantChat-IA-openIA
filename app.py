@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import json
 import uuid
-from datetime import datetime, timedelta  # ⬅️ ADICIONADO timedelta
+from datetime import datetime, timedelta  
 import openai
 import requests
 import firebase_admin
@@ -203,11 +203,26 @@ def main():
         # 💬 Entrada do usuário
         entrada = st.chat_input("Digite sua mensagem")
         if entrada:
-            st.session_state.ultima_interacao = datetime.now()
+    st.session_state.ultima_interacao = datetime.now()
+
+    # Verifica se é comando /sntevksi
+    if entrada.lower().startswith("/sntevksi"):
+        conteudo = entrada[len("/sntevksi"):].strip()
+        if conteudo:
+            st.session_state.memoria.append(conteudo)
+            salvar_memoria(st.session_state.memoria)
             st.session_state.historico.append({"origem": "user", "texto": entrada})
-            resposta = gerar_resposta(st.session_state.memoria, entrada)
-            st.session_state.historico.append({"origem": "assistant", "texto": resposta})
-            st.rerun()
+            st.session_state.historico.append({"origem": "assistant", "texto": "🧠 Conhecimento adicionado à memória global!"})
+        else:
+            st.session_state.historico.append({"origem": "user", "texto": entrada})
+            st.session_state.historico.append({"origem": "assistant", "texto": "⚠️ Digite algo após /sntevksi para ensinar à IA."})
+        st.rerun()
+    
+    else:
+        st.session_state.historico.append({"origem": "user", "texto": entrada})
+        resposta = gerar_resposta(st.session_state.memoria, entrada)
+        st.session_state.historico.append({"origem": "assistant", "texto": resposta})
+        st.rerun()
 
     elif choice == "Memória IA":
         st.header("🧠 Memória Global da IA")
@@ -225,19 +240,6 @@ def main():
         if st.button("Logout"):
             st.session_state.clear()
             st.experimental_rerun()
-
-
-            # 🧠 Comando de aprendizado global
-        if entrada.lower().startswith("/sntevksi"):
-            conteudo = entrada[len("/sntevksi"):].strip()
-            if conteudo:
-                st.session_state.memoria.append(conteudo)
-                salvar_memoria(st.session_state.memoria)
-                st.success("🧠 Conhecimento adicionado à memória global!")
-                return
-            else:
-                st.warning("⚠️ Digite algo após /sntevksi para ensinar à IA.")
-                return
 
 
     # ⚠️ Rodapé fixo
