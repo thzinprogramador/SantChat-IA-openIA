@@ -136,7 +136,7 @@ def main():
     st.markdown("<h1 style='text-align: center;'>SantChat - IA Interna Santander</h1>", unsafe_allow_html=True)
 
     # 🔑 Validaçao de key
-    st.write("🔑 Chave OpenRouter:", OPENROUTER_KEY[:10] + "..." if OPENROUTER_KEY else "⚠️ NÃO CARREGADA")
+    
 
     # 🔒 Validação da senha (opcional)
     if SENHA_ATIVADA:
