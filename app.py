@@ -232,7 +232,7 @@ def salvar_historico(user_id, historico):
         st.error(f"Erro ao salvar histórico: {str(e)}")
         return False
 
-def criar_usuario(email, senha, nivel=0):
+def criar_usuario(email, senha):
     try:
         nome_usuario = email.split("@")[0].lower()
         ref = db.reference(f"usuarios/{nome_usuario}")
@@ -243,7 +243,7 @@ def criar_usuario(email, senha, nivel=0):
         ref.set({
             "email": email,
             "senha": senha,  # Na prática, armazene uma hash da senha
-            "nivel": nivel,
+            "nivel": 0,  # Nível padrão 0 (usuário comum)
             "criado_em": datetime.now().isoformat()
         })
         return True, "Usuário criado com sucesso"
@@ -327,7 +327,7 @@ def main():
     <script>
     function handleLogin() {
         // Dispara um evento que será capturado pelo Streamlit
-        window.parent.document.dispatchEvent(new Event('LOGIN_BUTTON_CLICKED'));
+        window.parent.document.dispatchEvent(new CustomEvent('LOGIN_BUTTON_CLICKED'));
     }
     
     // Menu toggle para mobile
@@ -368,15 +368,24 @@ def main():
     st.markdown("""
     <script>
     document.addEventListener('LOGIN_BUTTON_CLICKED', function() {
-        // Atualiza o estado do Streamlit via AJAX
-        fetch('/_stcore/stream');
+        // Atualiza o estado do Streamlit
+        const event = new CustomEvent('UPDATE_LOGIN_STATE', { detail: { showLogin: true } });
+        window.parent.document.dispatchEvent(event);
+    });
+    
+    // Comunicação entre iframe e Streamlit
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'LOGIN_BUTTON_CLICKED') {
+            window.parent.document.dispatchEvent(new CustomEvent('LOGIN_BUTTON_CLICKED'));
+        }
     });
     </script>
     """, unsafe_allow_html=True)
-    
+
     # Se o botão de login foi clicado, mostrar formulário
-    if st.session_state.get("show_login") or "LOGIN_BUTTON_CLICKED" in st.experimental_get_query_params():
+    if st.session_state.get("login_clicked") or st.session_state.get("show_login"):
         st.session_state["show_login"] = True
+        st.session_state["login_clicked"] = False
 
     # Menu lateral
     with st.sidebar:
@@ -559,6 +568,20 @@ def main():
             st.error(f"Erro ao carregar feedbacks: {str(e)}")
     
     st.markdown('</div>', unsafe_allow_html=True)  # Fechar main-container
+
+    # Script adicional para comunicação com o botão de login
+    st.markdown("""
+    <script>
+    // Captura o evento do botão de login
+    document.addEventListener('LOGIN_BUTTON_CLICKED', function() {
+        // Envia mensagem para o Streamlit
+        window.parent.postMessage({
+            type: 'LOGIN_BUTTON_CLICKED',
+            data: {}
+        }, '*');
+    });
+    </script>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
