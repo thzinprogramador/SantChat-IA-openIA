@@ -91,7 +91,7 @@ def gerar_resposta(memoria, prompt):
                 "Content-Type": "application/json"
             },
             json={
-                "model": "openchat/openchat-7b:free",  # API de IA usada
+                "model": "nousresearch/deephermes-3-mistral-24b-preview:free",  # API de IA usada
                 "messages": msgs,
                 "max_tokens": 500,
                 "temperature": 0.7
