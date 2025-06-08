@@ -163,6 +163,7 @@ else:
     resposta = gerar_resposta(st.session_state.memoria, entrada_usuario)
 
 
+
         # 🧾 Atualiza histórico e log
         st.session_state.historico.append({"user": entrada_usuario, "bot": resposta})
         salvar_log(ip_usuario, f"Bot: {resposta}")
