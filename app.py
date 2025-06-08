@@ -146,15 +146,24 @@ def main():
     }
     </style>""", unsafe_allow_html=True)
 
+        # ⏱ Timeout de inatividade (2h)
+    if datetime.now() - st.session_state.ultima_interacao > timedelta(hours=2):
+        # 🆕 Apenas salva histórico se houver e limpa depois
+        if st.session_state.historico:
+            salvar_historico(user_id, st.session_state.historico)  # 🆕 Salva histórico
+            st.session_state.historico = []  # 🆕 Limpa histórico após salvar
+        st.session_state.ultima_interacao = datetime.now()
+
 # --- Login ou acesso anônimo ---
     if "auth_mode" not in st.session_state:
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🔐 Entrar com Google"):
-                token = auth0.authorize_button("Continuar com Google", icon=False)
+                # 🆕 Login Auth0 correto com requests
+                token = auth0_response
                 if token:
                     user_info = requests.get(
-                        f"https://{st.secrets['AUTH0_DOMAIN']}/userinfo",
+                        f"https://{st.secrets['AUTH0']['DOMAIN']}/userinfo",  # 🆕 corrigido AUTH0
                         headers={"Authorization": f"Bearer {token['access_token']}"}
                     ).json()
                     st.session_state["auth_mode"] = "google"
