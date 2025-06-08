@@ -91,7 +91,7 @@ def gerar_resposta(memoria, prompt):
                 "Content-Type": "application/json"
             },
             json={
-                "model": "nousresearch/deephermes-3-mistral-24b-preview:free",  # API de IA usada
+                "model": "openchat/openchat-7b:free",  # Troquei o modelo
                 "messages": msgs,
                 "max_tokens": 500,
                 "temperature": 0.7
@@ -103,6 +103,8 @@ def gerar_resposta(memoria, prompt):
             return f"Erro na API OpenRouter: {resp.status_code} - {resp.text}"
         
         data = resp.json()
+        st.write("Resposta bruta da API:", data)  # DEBUG LOG
+        
         if "choices" in data and data["choices"]:
             return data["choices"][0]["message"]["content"].strip()
         else:
@@ -110,6 +112,7 @@ def gerar_resposta(memoria, prompt):
 
     except Exception as e:
         return f"⚠️ Erro ao gerar resposta: {str(e)}"
+
 
 
 # --- Interface ---
