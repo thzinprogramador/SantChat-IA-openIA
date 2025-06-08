@@ -6,9 +6,10 @@ from datetime import datetime, timedelta
 import openai
 import requests
 import firebase_admin
+from datetime import datetime
+from streamlit_oauth import OAuth2Component
 from firebase_admin import credentials, db
 from streamlit_auth0 import login_button
-from datetime import datetime
 
 # --- Configurações iniciais ---
 st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
