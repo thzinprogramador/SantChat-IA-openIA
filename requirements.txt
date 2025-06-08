@@ -3,4 +3,4 @@ firebase-admin==6.4.0
 openai
 requests
 msal
-streamlit-oauth>=0.4.5
+streamlit-oauth==0.1.14
