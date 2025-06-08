@@ -20,6 +20,9 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(credentials.Certificate(firebase_key),
                                   {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]})
 
+st.write("CLIENT_ID:", st.secrets.get("AUTH0_CLIENT_ID"))
+st.write("DOMAIN:", st.secrets.get("AUTH0_DOMAIN"))
+
 # Autenticador google (por enquanto)
 auth0 = OAuth2Component(
     client_id=st.secrets["AUTH0_CLIENT_ID"],
