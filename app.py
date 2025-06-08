@@ -20,6 +20,7 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(credentials.Certificate(firebase_key),
                                   {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]})
 
+st.write("DEBUG AUTH0 secrets:", st.secrets.get("AUTH0"))
 
 auth0_response = login_button(
     client_id=st.secrets["AUTH0"]["CLIENT_ID"],
