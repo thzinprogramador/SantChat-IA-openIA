@@ -8,6 +8,15 @@ import requests
 import firebase_admin
 from firebase_admin import credentials, db
 
+# --- Configurações de Cores ---
+COR_PRIMARIA = "#ec0000"  # Vermelho Santander
+COR_SECUNDARIA = "#222222"  # Azul escuro
+COR_TERCIARIA = "#00a5a8"  # Verde água
+COR_TEXTO = "#333333"
+COR_FUNDO = "#ffffff"
+COR_BOTAO = "#ec0000"
+COR_BOTAO_HOVER = "#c50000"
+
 # --- Configurações iniciais ---
 st.set_page_config(
     page_title="SantChat", 
@@ -18,25 +27,25 @@ st.set_page_config(
 
 # --- Estilos CSS ---
 def load_css():
-    st.markdown("""
+    st.markdown(f"""
     <style>
-        :root {
-            --color-bg: #ffffff;
-            --color-text-primary: #222222;
+        :root {{
+            --color-bg: {COR_FUNDO};
+            --color-text-primary: {COR_TEXTO};
             --color-text-secondary: #555555;
-            --color-accent: #ec0000;  /* Vermelho Santander */
-            --color-accent-hover: #c50000;
-            --color-button-bg: #222222;
+            --color-accent: {COR_PRIMARIA};
+            --color-accent-hover: {COR_BOTAO_HOVER};
+            --color-button-bg: {COR_SECUNDARIA};
             --color-button-text: #ffffff;
             --color-shadow: rgba(0,0,0,0.05);
             --radius: 8px;
             --spacing: 1rem;
             --header-height: 70px;
             --max-width: 1000px;
-            --color-welcome: #00a5a8;  /* Verde água Santander */
-        }
+            --color-welcome: {COR_TERCIARIA};
+        }}
         
-        body {
+        body {{
             margin: 0;
             background: var(--color-bg);
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
@@ -44,9 +53,9 @@ def load_css():
             color: var(--color-text-secondary);
             font-size: 16px;
             line-height: 1.5;
-        }
+        }}
         
-        .header {
+        .header {{
             position: fixed;
             top: 0;
             left: 0;
@@ -58,22 +67,22 @@ def load_css():
             align-items: center;
             padding: 0 20px;
             z-index: 1000;
-        }
+        }}
         
-        .logo {
+        .logo {{
             font-weight: 800;
             font-size: 1.8rem;
             color: var(--color-accent);
             display: flex;
             align-items: center;
-        }
+        }}
         
-        .logo img {
+        .logo img {{
             height: 30px;
             margin-right: 10px;
-        }
+        }}
         
-        .login-btn {
+        .login-btn {{
             margin-left: auto;
             background: var(--color-accent);
             color: white;
@@ -83,40 +92,41 @@ def load_css():
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-        }
+        }}
         
-        .login-btn:hover {
+        .login-btn:hover {{
             background: var(--color-accent-hover);
             transform: translateY(-1px);
-        }
+        }}
         
-        .main-container {
+        .main-container {{
             max-width: var(--max-width);
             margin: 0 auto;
             padding: 20px;
             padding-top: calc(var(--header-height) + 20px);
-        }
+        }}
         
-        .welcome-title {
+        .welcome-title {{
             color: var(--color-welcome);
             font-size: 2.2rem;
             margin-bottom: 10px;
-        }
+        }}
         
-        .welcome-subtitle {
+        .welcome-subtitle {{
             color: var(--color-text-secondary);
             font-size: 1.1rem;
             margin-bottom: 30px;
-        }
+        }}
         
-        .chat-container {
+        .chat-container {{
             background: #f9f9f9;
             border-radius: var(--radius);
             padding: 20px;
             margin-bottom: 20px;
-        }
+            min-height: 300px;
+        }}
         
-        .user-msg {
+        .user-msg {{
             background: #e6f2ff;
             color: var(--color-text-primary);
             padding: 12px 16px;
@@ -124,9 +134,9 @@ def load_css():
             margin: 10px 0 10px auto;
             max-width: 80%;
             box-shadow: 0 1px 3px var(--color-shadow);
-        }
+        }}
         
-        .bot-msg {
+        .bot-msg {{
             background: white;
             color: var(--color-text-primary);
             padding: 12px 16px;
@@ -135,15 +145,15 @@ def load_css():
             max-width: 80%;
             box-shadow: 0 1px 3px var(--color-shadow);
             border-left: 4px solid var(--color-accent);
-        }
+        }}
         
-        .feedback-buttons {
+        .feedback-buttons {{
             display: flex;
             gap: 8px;
             margin-top: 10px;
-        }
+        }}
         
-        .feedback-btn {
+        .feedback-btn {{
             background: #f0f0f0;
             border: none;
             border-radius: 50%;
@@ -154,43 +164,67 @@ def load_css():
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
-        }
+        }}
         
-        .feedback-btn:hover {
+        .feedback-btn:hover {{
             background: #e0e0e0;
             transform: scale(1.1);
-        }
+        }}
         
-        .sidebar {
-            background: white;
-            padding: 20px;
-            border-right: 1px solid #eee;
-        }
+        .message-input {{
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }}
         
-        @media (max-width: 768px) {
-            .header {
-                padding: 0 15px;
-            }
-            
-            .logo {
-                font-size: 1.5rem;
-            }
-            
-            .login-btn {
-                padding: 6px 15px;
-                font-size: 0.9rem;
-            }
-        }
+        .message-input textarea {{
+            flex: 1;
+            border-radius: var(--radius);
+            border: 1px solid #ddd;
+            padding: 10px;
+            resize: none;
+            font-family: inherit;
+        }}
+        
+        .message-input button {{
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 0 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }}
+        
+        .message-input button:hover {{
+            background: var(--color-accent-hover);
+        }}
         
         /* Sidebar styles */
-        .sidebar-content {
+        .sidebar-content {{
             padding-top: 20px;
-        }
-        .sidebar-title {
+        }}
+        .sidebar-title {{
             color: var(--color-accent);
             font-size: 1.5rem;
             margin-bottom: 20px;
-        }
+        }}
+        
+        @media (max-width: 768px) {{
+            .header {{
+                padding: 0 15px;
+            }}
+            
+            .logo {{
+                font-size: 1.5rem;
+            }}
+            
+            .login-btn {{
+                padding: 6px 15px;
+                font-size: 0.9rem;
+            }}
+        }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -331,37 +365,23 @@ def gerar_resposta(memoria, prompt):
 
 # --- Componentes da UI ---
 def render_header():
-    st.markdown(f"""
-    <div class="header">
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.markdown(f"""
         <div class="logo">
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Santander_Bank_logo.svg/1200px-Santander_Bank_logo.svg.png" alt="Santander Logo">
             SantChat
         </div>
-        <button class="login-btn" onclick="window.loginClicked()">Entrar</button>
-    </div>
-    <div style="height: 80px;"></div>
-    """, unsafe_allow_html=True)
-
-def render_login_js():
-    st.markdown("""
-    <script>
-    window.loginClicked = function() {{
-        window.parent.postMessage({{
-            type: 'LOGIN_CLICKED'
-        }}, '*');
-    }}
+        """, unsafe_allow_html=True)
     
-    window.addEventListener('message', function(event) {{
-        if (event.data.type === 'LOGIN_CLICKED') {{
-            window.parent.document.dispatchEvent(new Event('LOGIN_CLICKED'));
-        }}
-    }});
-    </script>
-    """, unsafe_allow_html=True)
+    with col2:
+        if st.button("Entrar", key="header_login_btn"):
+            st.session_state.show_login = True
+            st.rerun()
 
 def render_login_sidebar():
     with st.sidebar:
-        st.markdown("""
+        st.markdown(f"""
         <div class="sidebar-content">
             <div class="sidebar-title">Menu</div>
         """, unsafe_allow_html=True)
@@ -406,8 +426,10 @@ def render_login_sidebar():
             st.session_state.clear()
             st.rerun()
 
+    return choice if "choice" in locals() else "Chat"
+
 def render_chat_interface():
-    st.markdown("""
+    st.markdown(f"""
     <div class="main-container">
         <h1 class="welcome-title">Bem-vindo ao SantChat</h1>
         <p class="welcome-subtitle">Seu chat inteligente.</p>
@@ -417,7 +439,7 @@ def render_chat_interface():
     chat_container = st.container()
     with chat_container:
         st.markdown("""
-        <div class="chat-container">
+        <div class="chat-container" id="chat-messages">
             <div class="bot-msg">
                 Sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.
                 <br><br>
@@ -425,6 +447,38 @@ def render_chat_interface():
             </div>
         </div>
         """, unsafe_allow_html=True)
+
+    # Input de mensagem
+    with st.form(key="message_form"):
+        msg = st.text_area("Digite sua mensagem:", key="user_input", height=100)
+        submit_button = st.form_submit_button(label="Enviar")
+        
+        if submit_button and msg:
+            # Adiciona mensagem do usuário ao chat
+            st.markdown(f"""
+            <script>
+            var chatDiv = document.getElementById('chat-messages');
+            var userMsg = document.createElement('div');
+            userMsg.className = 'user-msg';
+            userMsg.innerHTML = `{msg}`;
+            chatDiv.appendChild(userMsg);
+            </script>
+            """, unsafe_allow_html=True)
+            
+            # Gera e adiciona resposta do bot
+            resposta = gerar_resposta(st.session_state.memoria, msg)
+            st.markdown(f"""
+            <script>
+            var botMsg = document.createElement('div');
+            botMsg.className = 'bot-msg';
+            botMsg.innerHTML = `{resposta}`;
+            chatDiv.appendChild(botMsg);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+            </script>
+            """, unsafe_allow_html=True)
+            
+            # Limpa o input
+            st.session_state.user_input = ""
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -446,22 +500,26 @@ def main():
             "user_id": f"guest-{uuid.uuid4().hex[:6]}",
             "show_login": False,
             "memoria": carregar_memoria(),
-            "historico": []
+            "historico": [],
+            "messages": [
+                {
+                    "sender": "bot",
+                    "text": "Sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.\n\nEm que posso te ajudar hoje?"
+                }
+            ]
         })
 
     # Renderizar componentes
     render_header()
-    render_login_js()
+    choice = render_login_sidebar()
     
-    # Verificar clique no botão de login
-    if st.session_state.get("login_clicked"):
-        st.session_state.show_login = True
-        st.session_state.login_clicked = False
-        st.rerun()
-
-    # Renderizar sidebar e conteúdo principal
-    render_login_sidebar()
-    render_chat_interface()
+    # Renderizar conteúdo principal baseado na escolha
+    if choice == "Chat":
+        render_chat_interface()
+    elif choice == "Memória IA":
+        st.write("Gerenciamento da memória da IA")
+    elif choice == "Feedbacks":
+        st.write("Visualização de feedbacks")
 
 if __name__ == "__main__":
     main()
