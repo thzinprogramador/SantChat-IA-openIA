@@ -242,7 +242,7 @@ def criar_usuario(email, senha):
             
         ref.set({
             "email": email,
-            "senha": senha,  # Na prática, armazene uma hash da senha
+            "senha": senha,
             "nivel": 0,  # Nível padrão 0 (usuário comum)
             "criado_em": datetime.now().isoformat()
         })
@@ -259,7 +259,7 @@ def autenticar_usuario(email, senha):
         if not usuario:
             return False, None, "Usuário não encontrado"
             
-        if usuario.get("senha") != senha:  # Na prática, compare hashes
+        if usuario.get("senha") != senha:
             return False, None, "Senha incorreta"
             
         return True, usuario, "Login bem-sucedido"
@@ -306,103 +306,56 @@ def gerar_resposta(memoria, prompt):
         return f"⚠️ Erro ao gerar resposta: {str(e)}"
 
 def main():
-    # Cabeçalho personalizado com botão de login
-    st.markdown("""
-    <div class="stApp">
-        <header>
-            <div style="display:flex; align-items:center;">
-                <button class="menu-toggle" id="menuToggle" style="display:none;">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-                <div class="logo">SantChat</div>
+    # Solução simplificada para o botão de login
+    header = st.container()
+    with header:
+        st.markdown("""
+        <div style="position: fixed; top: 0; left: 0; right: 0; height: 64px; background: white; 
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; align-items: center; 
+                    padding: 0 1rem; z-index: 1000;">
+            <div style="font-weight: 800; font-size: 1.75rem; color: #111827;">SantChat</div>
+            <div style="margin-left: auto;">
+                <button id="btn-entrar" onclick="window.parent.document.dispatchEvent(new Event('LOGIN_CLICKED'));">Entrar</button>
             </div>
-            <div style="margin-left:auto;">
-                <button id="btn-entrar" onclick="handleLogin()">Entrar</button>
-            </div>
-        </header>
-    </div>
-    
-    <script>
-    function handleLogin() {
-        // Dispara um evento que será capturado pelo Streamlit
-        window.parent.document.dispatchEvent(new CustomEvent('LOGIN_BUTTON_CLICKED'));
-    }
-    
-    // Menu toggle para mobile
-    document.addEventListener('DOMContentLoaded', function() {
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.querySelector('.stSidebar');
+        </div>
         
-        if (window.innerWidth <= 900) {
-            menuToggle.style.display = 'flex';
-            
-            menuToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('open');
-            });
-        }
-        
-        window.addEventListener('resize', function() {
-            if (window.innerWidth <= 900) {
-                menuToggle.style.display = 'flex';
-            } else {
-                menuToggle.style.display = 'none';
-                sidebar.classList.remove('open');
-            }
-        });
-    });
-    </script>
-    """, unsafe_allow_html=True)
+        <div style="height: 80px;"></div>  <!-- Espaçador -->
+        """, unsafe_allow_html=True)
 
     # Inicialização do estado da sessão
     if "user_type" not in st.session_state:
-        st.session_state["user_type"] = "guest"
-        st.session_state["user_id"] = f"guest-{uuid.uuid4().hex[:6]}"
-        st.session_state["show_login"] = False
-        st.session_state["memoria"] = carregar_memoria()
-        st.session_state["historico"] = []
-        st.session_state["ultima_interacao"] = datetime.now()
+        st.session_state.update({
+            "user_type": "guest",
+            "user_id": f"guest-{uuid.uuid4().hex[:6]}",
+            "show_login": False,
+            "memoria": carregar_memoria(),
+            "historico": [],
+            "ultima_interacao": datetime.now(),
+            "login_clicked": False
+        })
 
-    # Verificar clique no botão de login via JavaScript
-    st.markdown("""
-    <script>
-    document.addEventListener('LOGIN_BUTTON_CLICKED', function() {
-        // Atualiza o estado do Streamlit
-        const event = new CustomEvent('UPDATE_LOGIN_STATE', { detail: { showLogin: true } });
-        window.parent.document.dispatchEvent(event);
-    });
-    
-    // Comunicação entre iframe e Streamlit
-    window.addEventListener('message', function(event) {
-        if (event.data.type === 'LOGIN_BUTTON_CLICKED') {
-            window.parent.document.dispatchEvent(new CustomEvent('LOGIN_BUTTON_CLICKED'));
-        }
-    });
-    </script>
-    """, unsafe_allow_html=True)
+    # Verificar se o botão de login foi clicado
+    if st.session_state.get("login_clicked"):
+        st.session_state.show_login = True
+        st.session_state.login_clicked = False
+        st.rerun()
 
-    # Se o botão de login foi clicado, mostrar formulário
-    if st.session_state.get("login_clicked") or st.session_state.get("show_login"):
-        st.session_state["show_login"] = True
-        st.session_state["login_clicked"] = False
-
-    # Menu lateral
+    # Menu lateral (login)
     with st.sidebar:
         if st.session_state.get("show_login"):
             st.subheader("Login")
             email = st.text_input("E-mail", key="login_email")
             senha = st.text_input("Senha", type="password", key="login_senha")
             
-            col1, col2 = st.columns([1, 1])
+            col1, col2 = st.columns(2)
             with col1:
                 if st.button("Entrar"):
                     sucesso, usuario, mensagem = autenticar_usuario(email, senha)
                     if sucesso:
-                        st.session_state["user_type"] = "dev" if usuario.get("nivel") == 8 else "comum"
-                        st.session_state["user_id"] = email
-                        st.session_state["show_login"] = False
-                        st.session_state["user_nome"] = email.split("@")[0]
+                        st.session_state.user_type = "dev" if usuario.get("nivel") == 8 else "comum"
+                        st.session_state.user_id = email
+                        st.session_state.show_login = False
+                        st.session_state.user_nome = email.split("@")[0]
                         st.success("Login realizado com sucesso!")
                         st.rerun()
                     else:
@@ -410,7 +363,7 @@ def main():
             
             with col2:
                 if st.button("Cancelar"):
-                    st.session_state["show_login"] = False
+                    st.session_state.show_login = False
                     st.rerun()
             
             st.divider()
@@ -423,7 +376,7 @@ def main():
                     st.success(mensagem)
                 else:
                     st.error(mensagem)
-        
+
         menu_itens = ["Chat"]
         if st.session_state.get("user_type") == "dev":
             menu_itens += ["Memória IA", "Feedbacks"]
@@ -432,8 +385,14 @@ def main():
         
         if st.session_state.get("user_type") != "guest" and st.button("Logout"):
             st.session_state.clear()
-            st.session_state["user_type"] = "guest"
-            st.session_state["user_id"] = f"guest-{uuid.uuid4().hex[:6]}"
+            st.session_state.update({
+                "user_type": "guest",
+                "user_id": f"guest-{uuid.uuid4().hex[:6]}",
+                "show_login": False,
+                "memoria": carregar_memoria(),
+                "historico": [],
+                "ultima_interacao": datetime.now()
+            })
             st.rerun()
 
     # Conteúdo principal
@@ -556,9 +515,9 @@ def main():
                             continue
                             
                         feedbacks_list = [(k, v) for k, v in user_feedbacks.items()]
-                        feedbacks_list.sort(key=lambda x: x[0], reverse=True)  # Ordena por timestamp
+                        feedbacks_list.sort(key=lambda x: x[0], reverse=True)
                         
-                        for fb_key, fb_data in feedbacks_list[:50]:  # Mostra os 50 mais recentes
+                        for fb_key, fb_data in feedbacks_list[:50]:
                             st.write(f"**Data:** {fb_data.get('timestamp', fb_key)}")
                             st.write(f"**Pergunta:** {fb_data.get('pergunta', '')}")
                             st.write(f"**Resposta:** {fb_data.get('resposta', '')}")
@@ -567,21 +526,24 @@ def main():
         except Exception as e:
             st.error(f"Erro ao carregar feedbacks: {str(e)}")
     
-    st.markdown('</div>', unsafe_allow_html=True)  # Fechar main-container
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # Script adicional para comunicação com o botão de login
-    st.markdown("""
+    # JavaScript para comunicação com o botão de login
+    components.html("""
     <script>
-    // Captura o evento do botão de login
-    document.addEventListener('LOGIN_BUTTON_CLICKED', function() {
-        // Envia mensagem para o Streamlit
+    document.addEventListener('LOGIN_CLICKED', function() {
         window.parent.postMessage({
-            type: 'LOGIN_BUTTON_CLICKED',
-            data: {}
+            type: 'LOGIN_CLICKED'
         }, '*');
     });
+    
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'LOGIN_CLICKED') {
+            window.parent.document.dispatchEvent(new Event('LOGIN_CLICKED'));
+        }
+    });
     </script>
-    """, unsafe_allow_html=True)
+    """, height=0)
 
 if __name__ == "__main__":
     main()
