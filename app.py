@@ -7,7 +7,6 @@ import openai
 import requests
 import firebase_admin
 from datetime import datetime
-from streamlit_oauth import OAuth2Component
 from firebase_admin import credentials, db
 from streamlit_auth0 import login_button
 
@@ -21,21 +20,13 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(credentials.Certificate(firebase_key),
                                   {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]})
 
-st.write("st.secrets.AUTH0:", st.secrets["AUTH0"])
-st.write("CLIENT_ID:", st.secrets["AUTH0"].get("CLIENT_ID"))
-st.write("DOMAIN:", st.secrets["AUTH0"].get("DOMAIN"))
 
-
-auth0_secrets = st.secrets["AUTH0"]
-
-auth0 = OAuth2Component(
-    client_id=auth0_secrets.get("CLIENT_ID"),
-    client_secret=auth0_secrets.get("CLIENT_SECRET"),
-    authorize_endpoint=f"https://{auth0_secrets.get('DOMAIN')}/authorize",
-    token_endpoint=f"https://{auth0_secrets.get('DOMAIN')}/oauth/token",
-    redirect_uri=auth0_secrets.get("REDIRECT_URI"),
-    name="auth0"
+auth0_response = login_button(
+    client_id=st.secrets["AUTH0"]["CLIENT_ID"],
+    domain=st.secrets["AUTH0"]["DOMAIN"],
+    redirect_uri=st.secrets["AUTH0"]["REDIRECT_URI"]
 )
+
 
 
 # Autenticador google (por enquanto)
