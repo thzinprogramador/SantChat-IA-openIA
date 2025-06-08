@@ -97,7 +97,7 @@ def gerar_resposta(memoria, prompt):
             headers={
                 "Authorization": f"Bearer {OPENROUTER_KEY}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://santchat-ia.streamlit.app/",  # link real do seu app
+                "HTTP-Referer": "https://santchat-openia.streamlit.app/",  # link real do seu app
                 "X-Title": "SantChat",
             },
             json={
