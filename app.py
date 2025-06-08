@@ -72,6 +72,23 @@ def salvar_historico(user_id, historico):
 def desbloquear_memoria_e_feed(user_id):
     return user_id in DEVS
 
+# --- Login via Firebase ---
+def autenticar_usuario_firebase(email, senha):
+    try:
+        resp = requests.post(
+            f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={st.secrets['FIREBASE_API_KEY']}",
+            json={"email": email, "password": senha, "returnSecureToken": True}
+        )
+        if resp.status_code == 200:
+            if email in DEVS:
+                return "dev"
+            return "common"
+        else:
+            return None
+    except Exception as e:
+        st.error(f"Erro na autenticação: {str(e)}")
+        return None
+
 def gerar_resposta(memoria, prompt):
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
     system_prompt = f"""
@@ -142,26 +159,23 @@ def main():
     </style>""", unsafe_allow_html=True)
 
     # --- Login ou acesso anônimo ---
-    if "auth_mode" not in st.session_state:
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔐 Entrar com Google"):
-                token = None
-                if token:
-                    user_info = requests.get(
-                        f"https://{st.secrets['AUTH0']['DOMAIN']}/userinfo",
-                        headers={"Authorization": f"Bearer {token['access_token']}"}
-                    ).json()
-                    st.session_state["auth_mode"] = "google"
-                    st.session_state["user_email"] = user_info["email"]
-                    st.session_state["user_id"] = user_info["email"]
-                    st.rerun()
-        with col2:
-            if st.button("🚪 Continuar como convidado"):
-                st.session_state["auth_mode"] = "guest"
-                st.session_state["user_id"] = f"guest-{uuid.uuid4().hex[:6]}"
-                st.rerun()
-        st.stop()
+    if "user_type" not in st.session_state:
+        st.session_state["user_type"] = None
+
+    if st.session_state["user_type"] is None:
+        st.title("SantChat")
+        st.subheader("Login")
+        email = st.text_input("E-mail")
+        senha = st.text_input("Senha", type="password")
+        if st.button("Entrar"):
+            tipo = autenticar_usuario_firebase(email, senha)
+            if tipo:
+                st.session_state["user_type"] = tipo
+                st.session_state["user_id"] = email
+                st.experimental_rerun()
+            else:
+                st.error("E-mail ou senha inválidos")
+    st.stop()
 
     if "memoria" not in st.session_state:
         st.session_state.memoria = carregar_memoria()
@@ -178,8 +192,9 @@ def main():
 
     st.markdown("<div class='chat-header'><h1>🤖 SantChat</h1><p>IA interna para colaboradores do Santander</p></div>", unsafe_allow_html=True)
 
-    user_id = obter_id_usuario()
-    is_dev = desbloquear_memoria_e_feed(user_id)
+    user_id = st.session_state.get("user_id", f"guest-{uuid.uuid4().hex[:6]}")
+    is_dev = st.session_state.get("user_type") == "dev"
+
 
     menu = ["Chat"]
     if is_dev:
