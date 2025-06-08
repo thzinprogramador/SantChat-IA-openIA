@@ -36,7 +36,7 @@ def load_css():
             --color-accent: {COR_PRIMARIA};
             --color-accent-hover: {COR_BOTAO_HOVER};
             --color-button-bg: {COR_SECUNDARIA};
-            --color-button-text: #002982;
+            --color-button-text: #ffffff;
             --color-shadow: rgba(0,0,0,0.05);
             --radius: 8px;
             --spacing: 1rem;
@@ -62,7 +62,7 @@ def load_css():
             right: 0;
             height: var(--header-height);
             background: white;
-            box-shadow: 0 2px 10px rgba(0, 52, 122, 1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
             padding: 0 20px;
@@ -124,6 +124,8 @@ def load_css():
             padding: 20px;
             margin-bottom: 20px;
             min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
         }}
         
         .user-msg {{
@@ -369,6 +371,7 @@ def render_header():
     with col1:
         st.markdown(f"""
         <div class="logo">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Santander_Bank_logo.svg/1200px-Santander_Bank_logo.svg.png" alt="Santander Logo">
             SantChat
         </div>
         """, unsafe_allow_html=True)
@@ -437,47 +440,39 @@ def render_chat_interface():
     # Container do chat
     chat_container = st.container()
     with chat_container:
-        st.markdown("""
-        <div class="chat-container" id="chat-messages">
-            <div class="bot-msg">
-                Sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.
-                <br><br>
-                Em que posso te ajudar hoje?
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="chat-container" id="chat-messages">', unsafe_allow_html=True)
+        
+        # Mostrar histórico de mensagens
+        if "messages" not in st.session_state:
+            st.session_state.messages = [
+                {"sender": "bot", "text": "Sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.\n\nEm que posso te ajudar hoje?"}
+            ]
+        
+        for message in st.session_state.messages:
+            if message["sender"] == "user":
+                st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
+            else:
+                st.markdown(f'<div class="bot-msg">{message["text"]}</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Input de mensagem
-    with st.form(key="message_form"):
-        msg = st.text_area("Digite sua mensagem:", key="user_input", height=100)
+    with st.form(key="message_form", clear_on_submit=True):
+        user_input = st.text_area("Digite sua mensagem:", key="user_input", height=100, value="")
         submit_button = st.form_submit_button(label="Enviar")
         
-        if submit_button and msg:
-            # Adiciona mensagem do usuário ao chat
-            st.markdown(f"""
-            <script>
-            var chatDiv = document.getElementById('chat-messages');
-            var userMsg = document.createElement('div');
-            userMsg.className = 'user-msg';
-            userMsg.innerHTML = `{msg}`;
-            chatDiv.appendChild(userMsg);
-            </script>
-            """, unsafe_allow_html=True)
+        if submit_button and user_input:
+            # Adiciona mensagem do usuário ao histórico
+            st.session_state.messages.append({"sender": "user", "text": user_input})
             
-            # Gera e adiciona resposta do bot
-            resposta = gerar_resposta(st.session_state.memoria, msg)
-            st.markdown(f"""
-            <script>
-            var botMsg = document.createElement('div');
-            botMsg.className = 'bot-msg';
-            botMsg.innerHTML = `{resposta}`;
-            chatDiv.appendChild(botMsg);
-            chatDiv.scrollTop = chatDiv.scrollHeight;
-            </script>
-            """, unsafe_allow_html=True)
+            # Gera resposta do bot
+            resposta = gerar_resposta(st.session_state.get("memoria", []), user_input)
             
-            # Limpa o input
-            st.session_state.user_input = ""
+            # Adiciona resposta do bot ao histórico
+            st.session_state.messages.append({"sender": "bot", "text": resposta})
+            
+            # Rerun para atualizar a interface
+            st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -488,6 +483,7 @@ def main():
     initialize_firebase()
     
     # Configurar chave da API
+    global OPENROUTER_KEY
     OPENROUTER_KEY = st.secrets["OPENROUTER_KEY"]
     openai.api_key = OPENROUTER_KEY
     openai.base_url = "https://openrouter.ai/api/v1"
@@ -499,13 +495,7 @@ def main():
             "user_id": f"guest-{uuid.uuid4().hex[:6]}",
             "show_login": False,
             "memoria": carregar_memoria(),
-            "historico": [],
-            "messages": [
-                {
-                    "sender": "bot",
-                    "text": "Sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.\n\nEm que posso te ajudar hoje?"
-                }
-            ]
+            "historico": []
         })
 
     # Renderizar componentes
