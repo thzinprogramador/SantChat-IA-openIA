@@ -16,18 +16,18 @@ st.markdown("""
 <style>
   :root {
     --color-bg: #ffffff;
-    --color-text-primary: #111827;
-    --color-text-secondary: #6b7280;
-    --color-accent: #111827;
-    --color-accent-hover: #374151;
-    --color-button-bg: #111827;
+    --color-text-primary: #222222;
+    --color-text-secondary: #555555;
+    --color-accent: #ec0000;  /* Vermelho Santander */
+    --color-accent-hover: #c50000;
+    --color-button-bg: #222222;  /* Azul escuro Santander */
     --color-button-text: #ffffff;
     --color-shadow: rgba(0,0,0,0.05);
-    --radius: 0.75rem;
+    --radius: 8px;
     --spacing: 1rem;
-    --header-height: 64px;
-    --max-width: 1200px;
-    --color-welcome: #7fdbff;
+    --header-height: 70px;
+    --max-width: 1000px;
+    --color-welcome: #00a5a8;  /* Verde água Santander */
   }
   
   body {
@@ -40,134 +40,157 @@ st.markdown("""
     line-height: 1.5;
   }
   
-  .logo {
-    font-weight: 800;
-    font-size: 1.75rem;
-    color: var(--color-text-primary);
-    user-select: none;
-  }
-  
-  button#btn-entrar {
-    background: var(--color-button-bg);
-    color: var(--color-button-text);
-    border: none;
-    border-radius: var(--radius);
-    padding: 0.5rem 1.25rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background-color 0.25s ease;
-  }
-  
-  button#btn-entrar:hover,
-  button#btn-entrar:focus {
-    background-color: var(--color-accent-hover);
-    outline: none;
-  }
-  
-  /* Estilos para as mensagens do chat */
-  .msg-user {
-    background: #f3f4f6;
-    color: var(--color-text-primary);
-    padding: 10px 15px;
-    border-radius: var(--radius);
-    margin: 8px 0 8px auto;
-    max-width: 80%;
-    box-shadow: 0 1px 3px var(--color-shadow);
-  }
-  
-  .msg-assistant {
-    background: var(--color-accent);
-    color: white;
-    padding: 10px 15px;
-    border-radius: var(--radius);
-    margin: 8px auto 8px 0;
-    max-width: 80%;
-    box-shadow: 0 1px 3px var(--color-shadow);
-  }
-  
-  /* Estilo para os botões de feedback */
-  .feedback-buttons {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-  }
-  
-  /* Container principal */
-  .main-container {
-    max-width: var(--max-width);
-    margin: 0 auto;
-    padding: var(--spacing);
-    padding-top: calc(var(--header-height) + 1rem);
-  }
-  
-  /* Header fixo */
-  .stApp header {
+  .header {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     height: var(--header-height);
-    background: var(--color-bg);
-    box-shadow: 0 2px 8px var(--color-shadow);
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     display: flex;
     align-items: center;
-    padding: 0 var(--spacing);
+    padding: 0 20px;
     z-index: 1000;
   }
   
-  /* Ajustes para o menu lateral */
-  .stSidebar {
-    padding-top: var(--header-height);
+  .logo {
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: var(--color-accent);
+    display: flex;
+    align-items: center;
   }
   
-  /* Esconder elementos padrão do Streamlit */
-  .stApp header:first-child {
-    display: none;
+  .logo img {
+    height: 30px;
+    margin-right: 10px;
   }
   
-  /* Menu responsivo */
-  @media (max-width: 900px) {
-    .stSidebar {
-      width: 240px;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-      position: fixed;
-      z-index: 1100;
-      background: var(--color-bg);
-      height: 100vh;
-      top: var(--header-height);
+  .login-btn {
+    margin-left: auto;
+    background: var(--color-accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    padding: 8px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .login-btn:hover {
+    background: var(--color-accent-hover);
+    transform: translateY(-1px);
+  }
+  
+  .main-container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 20px;
+    padding-top: calc(var(--header-height) + 20px);
+  }
+  
+  .welcome-title {
+    color: var(--color-welcome);
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+  }
+  
+  .welcome-subtitle {
+    color: var(--color-text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+  }
+  
+  .chat-container {
+    background: #f9f9f9;
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .user-msg {
+    background: #e6f2ff;
+    color: var(--color-text-primary);
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    margin: 10px 0 10px auto;
+    max-width: 80%;
+    box-shadow: 0 1px 3px var(--color-shadow);
+  }
+  
+  .bot-msg {
+    background: white;
+    color: var(--color-text-primary);
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    margin: 10px auto 10px 0;
+    max-width: 80%;
+    box-shadow: 0 1px 3px var(--color-shadow);
+    border-left: 4px solid var(--color-accent);
+  }
+  
+  .feedback-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  
+  .feedback-btn {
+    background: #f0f0f0;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .feedback-btn:hover {
+    background: #e0e0e0;
+    transform: scale(1.1);
+  }
+  
+  .sidebar {
+    background: white;
+    padding: 20px;
+    border-right: 1px solid #eee;
+  }
+  
+  @media (max-width: 768px) {
+    .header {
+      padding: 0 15px;
     }
     
-    .stSidebar.open {
-      transform: translateX(0);
+    .logo {
+      font-size: 1.5rem;
     }
     
-    .menu-toggle {
-      display: flex !important;
-      flex-direction: column;
-      justify-content: center;
-      width: 28px;
-      height: 22px;
-      cursor: pointer;
-      margin-right: 1rem;
-    }
-    
-    .menu-toggle span {
-      display: block;
-      height: 3px;
-      background: var(--color-text-primary);
-      border-radius: 2px;
-      margin-bottom: 5px;
-      transition: 0.3s;
-    }
-    
-    .menu-toggle span:last-child {
-      margin-bottom: 0;
+    .login-btn {
+      padding: 6px 15px;
+      font-size: 0.9rem;
     }
   }
 </style>
 """, unsafe_allow_html=True)
+
+# --- Header Fixo ---
+header = st.container()
+with header:
+    st.markdown("""
+    <div class="header">
+        <div class="logo">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Santander_Bank_logo.svg/1200px-Santander_Bank_logo.svg.png" alt="Santander Logo">
+            SantChat
+        </div>
+        <button class="login-btn" onclick="window.loginClicked()">Entrar</button>
+    </div>
+    <div style="height: 80px;"></div>
+    """, unsafe_allow_html=True)
 
 # --- Firebase Initialization ---
 if not firebase_admin._apps:
@@ -306,22 +329,6 @@ def gerar_resposta(memoria, prompt):
         return f"⚠️ Erro ao gerar resposta: {str(e)}"
 
 def main():
-    # Solução simplificada para o botão de login
-    header = st.container()
-    with header:
-        st.markdown("""
-        <div style="position: fixed; top: 0; left: 0; right: 0; height: 64px; background: white; 
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; align-items: center; 
-                    padding: 0 1rem; z-index: 1000;">
-            <div style="font-weight: 800; font-size: 1.75rem; color: #111827;">SantChat</div>
-            <div style="margin-left: auto;">
-                <button id="btn-entrar" onclick="window.parent.document.dispatchEvent(new Event('LOGIN_CLICKED'));">Entrar</button>
-            </div>
-        </div>
-        
-        <div style="height: 80px;"></div>  <!-- Espaçador -->
-        """, unsafe_allow_html=True)
-
     # Inicialização do estado da sessão
     if "user_type" not in st.session_state:
         st.session_state.update({
@@ -329,213 +336,17 @@ def main():
             "user_id": f"guest-{uuid.uuid4().hex[:6]}",
             "show_login": False,
             "memoria": carregar_memoria(),
-            "historico": [],
-            "ultima_interacao": datetime.now(),
-            "login_clicked": False
+            "historico": []
         })
 
-    # Verificar se o botão de login foi clicado
-    if st.session_state.get("login_clicked"):
-        st.session_state.show_login = True
-        st.session_state.login_clicked = False
-        st.rerun()
-
-    # Menu lateral (login)
-    with st.sidebar:
-        if st.session_state.get("show_login"):
-            st.subheader("Login")
-            email = st.text_input("E-mail", key="login_email")
-            senha = st.text_input("Senha", type="password", key="login_senha")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("Entrar"):
-                    sucesso, usuario, mensagem = autenticar_usuario(email, senha)
-                    if sucesso:
-                        st.session_state.user_type = "dev" if usuario.get("nivel") == 8 else "comum"
-                        st.session_state.user_id = email
-                        st.session_state.show_login = False
-                        st.session_state.user_nome = email.split("@")[0]
-                        st.success("Login realizado com sucesso!")
-                        st.rerun()
-                    else:
-                        st.error(mensagem)
-            
-            with col2:
-                if st.button("Cancelar"):
-                    st.session_state.show_login = False
-                    st.rerun()
-            
-            st.divider()
-            st.subheader("Criar conta")
-            novo_email = st.text_input("Novo e-mail", key="novo_email")
-            nova_senha = st.text_input("Nova senha", type="password", key="nova_senha")
-            if st.button("Registrar"):
-                sucesso, mensagem = criar_usuario(novo_email, nova_senha)
-                if sucesso:
-                    st.success(mensagem)
-                else:
-                    st.error(mensagem)
-
-        menu_itens = ["Chat"]
-        if st.session_state.get("user_type") == "dev":
-            menu_itens += ["Memória IA", "Feedbacks"]
-        
-        choice = st.radio("Menu", menu_itens)
-        
-        if st.session_state.get("user_type") != "guest" and st.button("Logout"):
-            st.session_state.clear()
-            st.session_state.update({
-                "user_type": "guest",
-                "user_id": f"guest-{uuid.uuid4().hex[:6]}",
-                "show_login": False,
-                "memoria": carregar_memoria(),
-                "historico": [],
-                "ultima_interacao": datetime.now()
-            })
-            st.rerun()
-
-    # Conteúdo principal
-    st.markdown('<div class="main-container">', unsafe_allow_html=True)
-    
-    if choice == "Chat":
-        st.markdown("<h1 style='font-weight: 700; font-size: 2.5rem; color: var(--color-welcome); margin-bottom: 0.5rem;'>Bem-vindo ao SantChat</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='color: var(--color-text-secondary); font-size: 1.125rem; max-width: 600px;'>Seu chat inteligente, com histórico, feedback e memória para usuários dev.</p>", unsafe_allow_html=True)
-        
-        # Exibir histórico de mensagens
-        for i, msg in enumerate(st.session_state.historico):
-            tipo = "msg-user" if msg["origem"] == "user" else "msg-assistant"
-            st.markdown(f"<div class='{tipo}'>{msg['texto']}</div>", unsafe_allow_html=True)
-            
-            # Botões de feedback para respostas da IA
-            if msg["origem"] == "assistant":
-                col1, col2, col3 = st.columns([1, 1, 1])
-                with col1:
-                    if st.button("👍", key=f"like_{i}", help="Gostei"):
-                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
-                        if salvar_feedback(st.session_state["user_id"], pergunta, msg["texto"], "👍 Gostei"):
-                            st.success("✅ Avaliação positiva enviada!")
-                        else:
-                            st.error("Erro ao enviar feedback")
-                with col2:
-                    if st.button("👎", key=f"dislike_{i}", help="Não gostei"):
-                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
-                        if salvar_feedback(st.session_state["user_id"], pergunta, msg["texto"], "👎 Não gostei"):
-                            st.warning("⚠️ Avaliação negativa registrada.")
-                        else:
-                            st.error("Erro ao enviar feedback")
-                with col3:
-                    if st.button("💬", key=f"fb_btn_{i}", help="Enviar feedback"):
-                        st.session_state[f"fb_{i}"] = True
-                
-                # Campo de feedback expandido
-                if st.session_state.get(f"fb_{i}"):
-                    feedback = st.text_input("Seu feedback:", key=f"fb_text_{i}")
-                    if st.button("Enviar feedback", key=f"send_fb_{i}"):
-                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
-                        if salvar_feedback(st.session_state["user_id"], pergunta, msg["texto"], feedback):
-                            st.success("✅ Feedback enviado com sucesso!")
-                            st.session_state[f"fb_{i}"] = False
-                        else:
-                            st.error("Erro ao enviar feedback")
-        
-        # Entrada do usuário
-        entrada = st.chat_input("Digite sua mensagem")
-        if entrada:
-            st.session_state.ultima_interacao = datetime.now()
-            
-            # Verificar se é um comando especial
-            if entrada.lower().startswith("/sntevksi"):
-                if st.session_state.get("user_type") == "dev":
-                    conteudo = entrada[len("/sntevksi"):].strip()
-                    if conteudo:
-                        st.session_state.memoria.append(conteudo)
-                        if salvar_memoria(st.session_state.memoria):
-                            st.success("🧠 Conhecimento adicionado à memória global!")
-                        else:
-                            st.error("Erro ao salvar na memória")
-                    else:
-                        st.warning("⚠️ Digite algo após /sntevksi para ensinar à IA.")
-                else:
-                    st.warning("⚠️ Apenas usuários dev podem usar este comando.")
-            else:
-                st.session_state.historico.append({"origem": "user", "texto": entrada})
-                resposta = gerar_resposta(st.session_state.memoria, entrada)
-                st.session_state.historico.append({"origem": "assistant", "texto": resposta})
-                
-                # Salvar histórico periodicamente
-                if len(st.session_state.historico) % 5 == 0:
-                    salvar_historico(st.session_state["user_id"], st.session_state.historico)
-                
-                st.rerun()
-    
-    elif choice == "Memória IA" and st.session_state.get("user_type") == "dev":
-        st.header("🧠 Memória Global da IA")
-        memoria = carregar_memoria()
-        
-        if memoria:
-            for i, item in enumerate(memoria):
-                col1, col2 = st.columns([4, 1])
-                with col1:
-                    st.text_area(f"Item {i+1}", value=item, key=f"mem_{i}", height=100)
-                with col2:
-                    if st.button("🗑️", key=f"del_{i}"):
-                        memoria.pop(i)
-                        if salvar_memoria(memoria):
-                            st.session_state.memoria = memoria
-                            st.rerun()
-                        else:
-                            st.error("Erro ao remover item")
-        
-        nova_memoria = st.text_area("Adicionar novo conhecimento à memória global")
-        if st.button("Salvar na memória"):
-            if nova_memoria:
-                st.session_state.memoria.append(nova_memoria)
-                if salvar_memoria(st.session_state.memoria):
-                    st.success("Conhecimento adicionado com sucesso!")
-                    st.rerun()
-                else:
-                    st.error("Erro ao salvar na memória")
-            else:
-                st.warning("Digite algo para adicionar à memória.")
-    
-    elif choice == "Feedbacks" and st.session_state.get("user_type") == "dev":
-        st.header("📊 Feedbacks Recebidos")
-        
-        try:
-            feedbacks_ref = db.reference("logs/feedbacks").get()
-            
-            if not feedbacks_ref:
-                st.info("Nenhum feedback recebido ainda.")
-            else:
-                for user_id, user_feedbacks in feedbacks_ref.items():
-                    with st.expander(f"Usuário: {user_id}"):
-                        if not user_feedbacks:
-                            st.write("Nenhum feedback deste usuário")
-                            continue
-                            
-                        feedbacks_list = [(k, v) for k, v in user_feedbacks.items()]
-                        feedbacks_list.sort(key=lambda x: x[0], reverse=True)
-                        
-                        for fb_key, fb_data in feedbacks_list[:50]:
-                            st.write(f"**Data:** {fb_data.get('timestamp', fb_key)}")
-                            st.write(f"**Pergunta:** {fb_data.get('pergunta', '')}")
-                            st.write(f"**Resposta:** {fb_data.get('resposta', '')}")
-                            st.write(f"**Feedback:** {fb_data.get('feedback', '')}")
-                            st.divider()
-        except Exception as e:
-            st.error(f"Erro ao carregar feedbacks: {str(e)}")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # JavaScript para comunicação com o botão de login
-    components.html("""
+    # JavaScript para o botão de login
+    st.markdown("""
     <script>
-    document.addEventListener('LOGIN_CLICKED', function() {
+    window.loginClicked = function() {
         window.parent.postMessage({
             type: 'LOGIN_CLICKED'
         }, '*');
-    });
+    }
     
     window.addEventListener('message', function(event) {
         if (event.data.type === 'LOGIN_CLICKED') {
@@ -543,7 +354,80 @@ def main():
         }
     });
     </script>
-    """, height=0)
+    """, unsafe_allow_html=True)
+
+    # Verificar clique no botão de login
+    if st.session_state.get("login_clicked"):
+        st.session_state.show_login = True
+        st.session_state.login_clicked = False
+        st.rerun()
+
+    # Menu lateral (login)
+    with st.sidebar:
+        st.markdown("""
+        <style>
+            .sidebar-content {
+                padding-top: 20px;
+            }
+            .sidebar-title {
+                color: var(--color-accent);
+                font-size: 1.5rem;
+                margin-bottom: 20px;
+            }
+        </style>
+        <div class="sidebar-content">
+            <div class="sidebar-title">Menu</div>
+        """, unsafe_allow_html=True)
+        
+        if st.session_state.get("show_login"):
+            st.subheader("Login")
+            email = st.text_input("E-mail")
+            senha = st.text_input("Senha", type="password")
+            
+            if st.button("Entrar", key="login_btn"):
+                # Lógica de autenticação aqui
+                st.session_state.show_login = False
+                st.success("Login realizado com sucesso!")
+                st.rerun()
+            
+            st.divider()
+            st.subheader("Criar conta")
+            new_email = st.text_input("Novo e-mail")
+            new_pass = st.text_input("Nova senha", type="password")
+            if st.button("Registrar"):
+                # Lógica de criação de conta aqui
+                st.success("Conta criada com sucesso!")
+        
+        menu_itens = ["Chat"]
+        if st.session_state.get("user_type") == "dev":
+            menu_itens += ["Memória IA", "Feedbacks"]
+        
+        choice = st.radio("Navegação", menu_itens)
+        
+        if st.session_state.get("user_type") != "guest" and st.button("Logout"):
+            st.session_state.clear()
+            st.rerun()
+
+    # Conteúdo principal
+    st.markdown("""
+    <div class="main-container">
+        <h1 class="welcome-title">Bem-vindo ao SantChat</h1>
+        <p class="welcome-subtitle">Seu chat inteligente, com histórico, feedback e memória para usuários dev.</p>
+    """, unsafe_allow_html=True)
+
+    if choice == "Chat":
+        # Lógica do chat aqui
+        st.markdown("""
+        <div class="chat-container">
+            <div class="bot-msg">
+                Sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.
+                <br><br>
+                Em que posso te ajudar hoje?
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
