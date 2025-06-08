@@ -208,8 +208,6 @@ def main():
         st.session_state["user_type"] = "guest"
         st.session_state["user_id"] = f"guest-{uuid.uuid4().hex[:6]}"
 
-    st.title("🤖 SantChat")
-
     if st.session_state["user_type"] == "guest":
         if st.button("Entrar"):
             st.session_state["show_login"] = True
