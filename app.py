@@ -60,6 +60,17 @@ def salvar_memoria(memoria):
         print(f"Erro ao salvar memória: {e}")
 
 
+# 🛠 Salva erros globais no Firebase
+def salvar_erro(erro, contexto="geral"):
+    try:
+        agora = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        ref = db.reference(f"logs/erros/{contexto}")
+        ref.update({agora: str(erro)})
+    except Exception as e:
+    salvar_erro(e, contexto="resposta_ia")  # ou outro nome como "firebase", "memoria", etc.
+    st.error("❌ Erro inesperado. Detalhes foram registrados.")
+
+
 
 # 📝 Log por IP
 def salvar_log(ip, conteudo):
