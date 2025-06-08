@@ -42,8 +42,9 @@ def salvar_memoria(memoria):
         ref = db.reference("memoria_global")
         ref.set(memoria)
     except Exception as e:
-    st.error(f"Erro ao salvar memória: {e}")
-    print(f"Erro ao salvar memória: {e}")
+        st.error(f"Erro ao salvar memória: {e}")
+        print(f"Erro ao salvar memória: {e}")
+
 
 
 # 📝 Log por IP
