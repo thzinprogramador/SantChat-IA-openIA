@@ -13,22 +13,24 @@ from firebase_admin import credentials, db
 # 🔐 Inicializa Firebase (apenas uma vez)
 if not firebase_admin._apps:
     firebase_key = {
-    "type": st.secrets.FIREBASE_KEY["type"],
-    "project_id": st.secrets.FIREBASE_KEY["project_id"],
-    "private_key_id": st.secrets.FIREBASE_KEY["private_key_id"],
-    "private_key": st.secrets.FIREBASE_KEY["private_key"].replace("\\n", "\n"),
-    "client_email": st.secrets.FIREBASE_KEY["client_email"],
-    "client_id": st.secrets.FIREBASE_KEY["client_id"],
-    "auth_uri": st.secrets.FIREBASE_KEY["auth_uri"],
-    "token_uri": st.secrets.FIREBASE_KEY["token_uri"],
-    "auth_provider_x509_cert_url": st.secrets.FIREBASE_KEY["auth_provider_x509_cert_url"],
-    "client_x509_cert_url": st.secrets.FIREBASE_KEY["client_x509_cert_url"],
-    "universe_domain": st.secrets.FIREBASE_KEY.get("universe_domain", "googleapis.com")
-}
-cred = credentials.Certificate(firebase_key)
+        "type": st.secrets.FIREBASE_KEY["type"],
+        "project_id": st.secrets.FIREBASE_KEY["project_id"],
+        "private_key_id": st.secrets.FIREBASE_KEY["private_key_id"],
+        "private_key": st.secrets.FIREBASE_KEY["private_key"].replace("\\n", "\n"),
+        "client_email": st.secrets.FIREBASE_KEY["client_email"],
+        "client_id": st.secrets.FIREBASE_KEY["client_id"],
+        "auth_uri": st.secrets.FIREBASE_KEY["auth_uri"],
+        "token_uri": st.secrets.FIREBASE_KEY["token_uri"],
+        "auth_provider_x509_cert_url": st.secrets.FIREBASE_KEY["auth_provider_x509_cert_url"],
+        "client_x509_cert_url": st.secrets.FIREBASE_KEY["client_x509_cert_url"],
+        "universe_domain": st.secrets.FIREBASE_KEY.get("universe_domain", "googleapis.com")
+    }
+
+    cred = credentials.Certificate(firebase_key)
     firebase_admin.initialize_app(cred, {
-    "databaseURL": "https://santchat-ia-default-rtdb.firebaseio.com"
-})
+        "databaseURL": "https://santchat-ia-default-rtdb.firebaseio.com"
+    })
+
 
 # 🔑 Configurações de segurança e API
 OPENROUTER_KEY = st.secrets.get("OPENROUTER_KEY", "")
