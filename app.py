@@ -12,10 +12,10 @@ from firebase_admin import credentials, db
 
 # 🔐 Inicializa Firebase (apenas uma vez)
 if not firebase_admin._apps:
-firebase_key = dict(st.secrets["FIREBASE_KEY"])
-cred = credentials.Certificate(firebase_key)
-firebase_admin.initialize_app(cred, {
-"databaseURL": "https://santchat-ia-default-rtdb.firebaseio.com"
+    firebase_key = dict(st.secrets["FIREBASE_KEY"])
+    cred = credentials.Certificate(firebase_key)
+    firebase_admin.initialize_app(cred, {
+    "databaseURL": "https://santchat-ia-default-rtdb.firebaseio.com"
 })
 
 # 🔑 Configurações de segurança e API
