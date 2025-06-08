@@ -9,200 +9,200 @@ import firebase_admin
 from firebase_admin import credentials, db
 
 # --- Configurações iniciais ---
-st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
+st.set_page_config(
+    page_title="SantChat", 
+    page_icon="🤖", 
+    layout="centered",
+    initial_sidebar_state="auto"
+)
 
-# Aplicar o CSS personalizado com a paleta de cores correta
-st.markdown("""
-<style>
-  :root {
-    --color-bg: #ffffff;
-    --color-text-primary: #222222;
-    --color-text-secondary: #555555;
-    --color-accent: #ec0000;  /* Vermelho Santander */
-    --color-accent-hover: #c50000;
-    --color-button-bg: #002c5f;  /* Azul escuro Santander */
-    --color-button-text: #ffffff;
-    --color-shadow: rgba(0,0,0,0.05);
-    --radius: 8px;
-    --spacing: 1rem;
-    --header-height: 70px;
-    --max-width: 1000px;
-    --color-welcome: #00a5a8;  /* Verde água Santander */
-  }
-  
-  body {
-    margin: 0;
-    background: var(--color-bg);
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-      Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    color: var(--color-text-secondary);
-    font-size: 16px;
-    line-height: 1.5;
-  }
-  
-  .header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--header-height);
-    background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    z-index: 1000;
-  }
-  
-  .logo {
-    font-weight: 800;
-    font-size: 1.8rem;
-    color: var(--color-accent);
-    display: flex;
-    align-items: center;
-  }
-  
-  .logo img {
-    height: 30px;
-    margin-right: 10px;
-  }
-  
-  .login-btn {
-    margin-left: auto;
-    background: var(--color-button-bg);
-    color: var(--color-button-text);
-    border: none;
-    border-radius: var(--radius);
-    padding: 8px 20px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .login-btn:hover {
-    background: var(--color-accent);
-    transform: translateY(-1px);
-  }
-  
-  .main-container {
-    max-width: var(--max-width);
-    margin: 0 auto;
-    padding: 20px;
-    padding-top: calc(var(--header-height) + 20px);
-  }
-  
-  .welcome-title {
-    color: var(--color-button-bg);
-    font-size: 2.2rem;
-    margin-bottom: 10px;
-  }
-  
-  .welcome-subtitle {
-    color: var(--color-text-secondary);
-    font-size: 1.1rem;
-    margin-bottom: 30px;
-  }
-  
-  .chat-container {
-    background: #f9f9f9;
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-  
-  .user-msg {
-    background: #e6f2ff;
-    color: var(--color-text-primary);
-    padding: 12px 16px;
-    border-radius: var(--radius);
-    margin: 10px 0 10px auto;
-    max-width: 80%;
-    box-shadow: 0 1px 3px var(--color-shadow);
-  }
-  
-  .bot-msg {
-    background: white;
-    color: var(--color-text-primary);
-    padding: 12px 16px;
-    border-radius: var(--radius);
-    margin: 10px auto 10px 0;
-    max-width: 80%;
-    box-shadow: 0 1px 3px var(--color-shadow);
-    border-left: 4px solid var(--color-welcome);
-  }
-  
-  .feedback-buttons {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-  
-  .feedback-btn {
-    background: #f0f0f0;
-    border: none;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .feedback-btn:hover {
-    background: #e0e0e0;
-    transform: scale(1.1);
-  }
-  
-  .sidebar {
-    background: white;
-    padding: 20px;
-    border-right: 1px solid #eee;
-  }
-  
-  .stTextInput>div>div>input {
-    border: 1px solid var(--color-button-bg) !important;
-    border-radius: var(--radius) !important;
-  }
-  
-  .stButton>button {
-    background-color: var(--color-button-bg) !important;
-    color: var(--color-button-text) !important;
-    border-radius: var(--radius) !important;
-  }
-  
-  .stButton>button:hover {
-    background-color: var(--color-accent) !important;
-  }
-  
-  @media (max-width: 768px) {
-    .header {
-      padding: 0 15px;
-    }
-    
-    .logo {
-      font-size: 1.5rem;
-    }
-    
-    .login-btn {
-      padding: 6px 15px;
-      font-size: 0.9rem;
-    }
-  }
-</style>
-""", unsafe_allow_html=True)
+# --- Estilos CSS ---
+def load_css():
+    st.markdown("""
+    <style>
+        :root {
+            --color-bg: #ffffff;
+            --color-text-primary: #222222;
+            --color-text-secondary: #555555;
+            --color-accent: #ec0000;  /* Vermelho Santander */
+            --color-accent-hover: #c50000;
+            --color-button-bg: #222222;
+            --color-button-text: #ffffff;
+            --color-shadow: rgba(0,0,0,0.05);
+            --radius: 8px;
+            --spacing: 1rem;
+            --header-height: 70px;
+            --max-width: 1000px;
+            --color-welcome: #00a5a8;  /* Verde água Santander */
+        }
+        
+        body {
+            margin: 0;
+            background: var(--color-bg);
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            color: var(--color-text-secondary);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+        
+        .logo {
+            font-weight: 800;
+            font-size: 1.8rem;
+            color: var(--color-accent);
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            height: 30px;
+            margin-right: 10px;
+        }
+        
+        .login-btn {
+            margin-left: auto;
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 8px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .login-btn:hover {
+            background: var(--color-accent-hover);
+            transform: translateY(-1px);
+        }
+        
+        .main-container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 20px;
+            padding-top: calc(var(--header-height) + 20px);
+        }
+        
+        .welcome-title {
+            color: var(--color-welcome);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-subtitle {
+            color: var(--color-text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+        
+        .chat-container {
+            background: #f9f9f9;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .user-msg {
+            background: #e6f2ff;
+            color: var(--color-text-primary);
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin: 10px 0 10px auto;
+            max-width: 80%;
+            box-shadow: 0 1px 3px var(--color-shadow);
+        }
+        
+        .bot-msg {
+            background: white;
+            color: var(--color-text-primary);
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin: 10px auto 10px 0;
+            max-width: 80%;
+            box-shadow: 0 1px 3px var(--color-shadow);
+            border-left: 4px solid var(--color-accent);
+        }
+        
+        .feedback-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .feedback-btn {
+            background: #f0f0f0;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .feedback-btn:hover {
+            background: #e0e0e0;
+            transform: scale(1.1);
+        }
+        
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-right: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 15px;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+            
+            .login-btn {
+                padding: 6px 15px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Sidebar styles */
+        .sidebar-content {
+            padding-top: 20px;
+        }
+        .sidebar-title {
+            color: var(--color-accent);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- Firebase Initialization ---
-if not firebase_admin._apps:
-    firebase_key = {k: (v.replace("\n", "\n") if k == "private_key" else v)
-                    for k, v in st.secrets["FIREBASE_KEY"].items()}
-    firebase_admin.initialize_app(credentials.Certificate(firebase_key),
-                                  {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]})
-
-OPENROUTER_KEY = st.secrets["OPENROUTER_KEY"]
-openai.api_key = OPENROUTER_KEY
-openai.base_url = "https://openrouter.ai/api/v1"
+def initialize_firebase():
+    if not firebase_admin._apps:
+        firebase_key = {k: (v.replace("\n", "\n") if k == "private_key" else v)
+                        for k, v in st.secrets["FIREBASE_KEY"].items()}
+        firebase_admin.initialize_app(
+            credentials.Certificate(firebase_key),
+            {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]}
+        )
 
 # --- Funções Auxiliares ---
 def carregar_memoria():
@@ -329,22 +329,9 @@ def gerar_resposta(memoria, prompt):
     except Exception as e:
         return f"⚠️ Erro ao gerar resposta: {str(e)}"
 
-def main():
-    # Inicialização do estado da sessão
-    if "user_type" not in st.session_state:
-        st.session_state.update({
-            "user_type": "guest",
-            "user_id": f"guest-{uuid.uuid4().hex[:6]}",
-            "show_login": False,
-            "memoria": carregar_memoria(),
-            "historico": [],
-            "messages": [
-                {"role": "bot", "text": "Sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços. Em que posso te ajudar hoje?"}
-            ]
-        })
-
-    # --- Header Fixo ---
-    st.markdown("""
+# --- Componentes da UI ---
+def render_header():
+    st.markdown(f"""
     <div class="header">
         <div class="logo">
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Santander_Bank_logo.svg/1200px-Santander_Bank_logo.svg.png" alt="Santander Logo">
@@ -355,42 +342,26 @@ def main():
     <div style="height: 80px;"></div>
     """, unsafe_allow_html=True)
 
-    # JavaScript para o botão de login
+def render_login_js():
     st.markdown("""
     <script>
-    window.loginClicked = function() {
-        window.parent.postMessage({
+    window.loginClicked = function() {{
+        window.parent.postMessage({{
             type: 'LOGIN_CLICKED'
-        }, '*');
-    }
+        }}, '*');
+    }}
     
-    window.addEventListener('message', function(event) {
-        if (event.data.type === 'LOGIN_CLICKED') {
+    window.addEventListener('message', function(event) {{
+        if (event.data.type === 'LOGIN_CLICKED') {{
             window.parent.document.dispatchEvent(new Event('LOGIN_CLICKED'));
-        }
-    });
+        }}
+    }});
     </script>
     """, unsafe_allow_html=True)
 
-    # Verificar clique no botão de login
-    if st.session_state.get("login_clicked"):
-        st.session_state.show_login = True
-        st.session_state.login_clicked = False
-        st.rerun()
-
-    # Menu lateral (login)
+def render_login_sidebar():
     with st.sidebar:
         st.markdown("""
-        <style>
-            .sidebar-content {
-                padding-top: 20px;
-            }
-            .sidebar-title {
-                color: var(--color-button-bg);
-                font-size: 1.5rem;
-                margin-bottom: 20px;
-            }
-        </style>
         <div class="sidebar-content">
             <div class="sidebar-title">Menu</div>
         """, unsafe_allow_html=True)
@@ -401,28 +372,29 @@ def main():
             senha = st.text_input("Senha", type="password")
             
             if st.button("Entrar", key="login_btn"):
-                sucesso, usuario, msg = autenticar_usuario(email, senha)
-                if sucesso:
-                    st.session_state.user_type = "user"
-                    st.session_state.user_id = email.split("@")[0].lower()
-                    st.session_state.show_login = False
-                    st.success(msg)
+                success, user, message = autenticar_usuario(email, senha)
+                if success:
+                    st.session_state.update({
+                        "user_type": "user",
+                        "user_id": user["email"],
+                        "show_login": False,
+                        "user_data": user
+                    })
+                    st.success(message)
                     st.rerun()
                 else:
-                    st.error(msg)
+                    st.error(message)
             
             st.divider()
             st.subheader("Criar conta")
             new_email = st.text_input("Novo e-mail")
             new_pass = st.text_input("Nova senha", type="password")
             if st.button("Registrar"):
-                sucesso, msg = criar_usuario(new_email, new_pass)
-                if sucesso:
-                    st.success(msg)
-                    st.session_state.show_login = False
-                    st.rerun()
+                success, message = criar_usuario(new_email, new_pass)
+                if success:
+                    st.success(message)
                 else:
-                    st.error(msg)
+                    st.error(message)
         
         menu_itens = ["Chat"]
         if st.session_state.get("user_type") == "dev":
@@ -434,46 +406,62 @@ def main():
             st.session_state.clear()
             st.rerun()
 
-    # Conteúdo principal
+def render_chat_interface():
     st.markdown("""
     <div class="main-container">
         <h1 class="welcome-title">Bem-vindo ao SantChat</h1>
-        <p class="welcome-subtitle">Seu chat inteligente, com histórico, feedback e memória para usuários dev.</p>
+        <p class="welcome-subtitle">Seu chat inteligente.</p>
     """, unsafe_allow_html=True)
 
-    # Área do chat
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-    
-    # Exibir mensagens existentes
-    for msg in st.session_state.messages:
-        if msg["role"] == "bot":
-            st.markdown(f'<div class="bot-msg">{msg["text"]}</div>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<div class="user-msg">{msg["text"]}</div>', unsafe_allow_html=True)
-    
-    # Input do usuário
-    user_input = st.text_input("Digite sua mensagem:", key="user_input", placeholder="Como posso ajudar?")
-    
-    if st.button("Enviar") and user_input:
-        # Adicionar mensagem do usuário ao histórico
-        st.session_state.messages.append({"role": "user", "text": user_input})
-        
-        # Gerar resposta do bot
-        resposta = gerar_resposta(st.session_state.memoria, user_input)
-        
-        # Adicionar resposta ao histórico
-        st.session_state.messages.append({"role": "bot", "text": resposta})
-        
-        # Salvar no histórico do Firebase se não for convidado
-        if st.session_state.user_type != "guest":
-            salvar_historico(st.session_state.user_id, st.session_state.messages)
-        
-        # Limpar input e recarregar a página para mostrar as novas mensagens
-        st.session_state.user_input = ""
-        st.rerun()
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Container do chat
+    chat_container = st.container()
+    with chat_container:
+        st.markdown("""
+        <div class="chat-container">
+            <div class="bot-msg">
+                Sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.
+                <br><br>
+                Em que posso te ajudar hoje?
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
     st.markdown("</div>", unsafe_allow_html=True)
+
+# --- Função Principal ---
+def main():
+    # Carregar configurações
+    load_css()
+    initialize_firebase()
+    
+    # Configurar chave da API
+    OPENROUTER_KEY = st.secrets["OPENROUTER_KEY"]
+    openai.api_key = OPENROUTER_KEY
+    openai.base_url = "https://openrouter.ai/api/v1"
+
+    # Inicialização do estado da sessão
+    if "user_type" not in st.session_state:
+        st.session_state.update({
+            "user_type": "guest",
+            "user_id": f"guest-{uuid.uuid4().hex[:6]}",
+            "show_login": False,
+            "memoria": carregar_memoria(),
+            "historico": []
+        })
+
+    # Renderizar componentes
+    render_header()
+    render_login_js()
+    
+    # Verificar clique no botão de login
+    if st.session_state.get("login_clicked"):
+        st.session_state.show_login = True
+        st.session_state.login_clicked = False
+        st.rerun()
+
+    # Renderizar sidebar e conteúdo principal
+    render_login_sidebar()
+    render_chat_interface()
 
 if __name__ == "__main__":
     main()
