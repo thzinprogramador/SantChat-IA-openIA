@@ -92,6 +92,108 @@ def gerar_resposta(memoria, prompt):
         return f"⚠️ Erro ao gerar resposta: {str(e)}"
 
 def main():
+ # 🎨 Estilo visual (tema escuro + layout fixo)
+    st.markdown("""<style>
+    body { background:#111; color:#eee; }
+    .chat-header {
+    position: sticky;  /* em vez de fixed */
+    top: 0;
+    background: #111;
+    z-index: 1000;
+    }
+
+    .chat-header h1 { color:#ec0000; }
+    .disclaimer { position:fixed; bottom:0; width:100%; text-align:center; color:#888; padding:10px; background:#111; }
+    section.main > div:has(div[data-testid="stChatInput"]) {
+        padding-bottom:100px!important; padding-top:90px!important;
+    }
+    .msg-user {
+        background:#333; color:#fff; padding:10px;
+        border-radius:10px; margin:8px 0 8px auto; max-width:80%;
+    }
+    .msg-assistant {
+        background:#222; color:#eee; padding:10px;
+        border-radius:10px; margin:8px auto 8px 0; max-width:80%;
+    }
+    /* Botões mais compactos */
+    button[kind="secondary"] {
+        padding: 0.2rem 0.5rem !important;
+        margin: 0.1rem !important;
+    }
+    /* Espaçamento entre colunas */
+    .stColumns > div {
+        gap: 0.5rem;
+    }
+    button[kind="secondary"]:hover {
+        background-color:#333!important; color:#fff!important;
+    }
+    </style>""", unsafe_allow_html=True)
+
+    # 🧢 Cabeçalho fixo
+    st.markdown("<div class='chat-header'><h1>🤖 SantChat</h1><p>IA interna para colaboradores do Santander</p></div>", unsafe_allow_html=True)
+
+    # 🧑 Identificação do usuário
+    user_id = obter_id_usuario()
+    is_dev = desbloquear_memoria_e_feed(user_id)
+
+    # 🧠 Inicializa estados
+    if "memoria" not in st.session_state:
+        st.session_state.memoria = carregar_memoria()
+    if "historico" not in st.session_state:
+        st.session_state.historico = []
+    if "ultima_interacao" not in st.session_state:
+        st.session_state.ultima_interacao = datetime.now()
+
+    # ⏱ Timeout de inatividade (2h)
+    if datetime.now() - st.session_state.ultima_interacao > timedelta(hours=2):
+        if st.session_state.historico:
+            salvar_historico(user_id, st.session_state.historico)
+            st.session_state.historico = []
+        st.session_state.ultima_interacao = datetime.now()
+        print("Salvando histórico por timeout")
+        salvar_historico(user_id, st.session_state.historico)
+
+    # 📂 Menu lateral (com base no tipo de usuário)
+    menu = ["Chat"]
+    if is_dev:
+        menu += ["Memória IA", "Feedbacks", "Configurações"]
+    choice = st.sidebar.radio("Menu", menu)
+
+    if choice == "Chat":
+        # 🧾 Mostrar histórico de mensagens
+        for i, msg in enumerate(st.session_state.historico):
+            tipo = "msg-user" if msg["origem"] == "user" else "msg-assistant"
+            st.markdown(f"<div class='{tipo}'>{msg['texto']}</div>", unsafe_allow_html=True)
+
+            # 🎯 Botões para a resposta da IA
+            if msg["origem"] == "assistant":
+                col1, col2, col3 = st.columns([1, 1, 1])
+
+                with col1:
+                    if st.button("👍", key=f"like_{i}", help="Gostei"):
+                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+                        salvar_feedback(user_id, pergunta, msg["texto"], "👍 Gostei")
+                        st.success("✅ Avaliação positiva enviada!")
+
+                with col2:
+                    if st.button("👎", key=f"dislike_{i}", help="Não gostei"):
+                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+                        salvar_feedback(user_id, pergunta, msg["texto"], "👎 Não gostei")
+                        st.warning("⚠️ Avaliação negativa registrada.")
+
+                with col3:
+                    if st.button("💬", key=f"fb_btn_{i}", help="Enviar feedback"):
+                        st.session_state[f"fb_{i}"] = True
+
+                # 💬 Campo de feedback (expande ao clicar)
+                if st.session_state.get(f"fb_{i}"):
+                    feedback = st.text_input("Seu feedback:", key=f"fb_text_{i}")
+                    if st.button("Enviar feedback", key=f"send_fb_{i}"):
+                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+                        salvar_feedback(user_id, pergunta, msg["texto"], feedback)
+                        st.success("✅ Feedback enviado com sucesso!")
+                        st.session_state[f"fb_{i}"] = False
+
     # --- Novo controle de login ---
     if "user_type" not in st.session_state:
         st.session_state["user_type"] = "guest"
@@ -161,16 +263,16 @@ def main():
 
 
             # 🧠 Comando de aprendizado global
-        if entrada.lower().startswith("/sntevksi"):
-            conteudo = entrada[len("/sntevksi"):].strip()
-            if conteudo:
-                st.session_state.memoria.append(conteudo)
-                salvar_memoria(st.session_state.memoria)
-                st.success("🧠 Conhecimento adicionado à memória global!")
-                return
-            else:
-                st.warning("⚠️ Digite algo após /sntevksi para ensinar à IA.")
-                return
+    if entrada.lower().startswith("/sntevksi"):
+        conteudo = entrada[len("/sntevksi"):].strip()
+        if conteudo:
+            st.session_state.memoria.append(conteudo)
+            salvar_memoria(st.session_state.memoria)
+            st.success("🧠 Conhecimento adicionado à memória global!")
+            return
+        else:
+            st.warning("⚠️ Digite algo após /sntevksi para ensinar à IA.")
+        return
 
 if __name__ == "__main__":
     main()
