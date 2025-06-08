@@ -24,6 +24,17 @@ if not firebase_admin._apps:
 st.write("CLIENT_ID:", st.secrets.get("AUTH0_CLIENT_ID"))
 st.write("DOMAIN:", st.secrets.get("AUTH0_DOMAIN"))
 
+auth0 = OAuth2Component(
+    client_id=st.secrets["AUTH0"]["CLIENT_ID"],
+    client_secret=st.secrets["AUTH0"]["CLIENT_SECRET"],
+    authorize_url=f"https://{st.secrets['AUTH0']['DOMAIN']}/authorize",
+    token_url=f"https://{st.secrets['AUTH0']['DOMAIN']}/oauth/token",
+    redirect_uri=st.secrets["AUTH0"]["REDIRECT_URI"],
+    scope="openid profile email",
+    name="auth0"
+)
+
+
 # Autenticador google (por enquanto)
 auth0_response = login_button(
     client_id=st.secrets["AUTH0"]["CLIENT_ID"],
