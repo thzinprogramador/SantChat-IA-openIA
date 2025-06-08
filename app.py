@@ -164,8 +164,8 @@ def main():
             st.markdown(f"<div class='{tipo}'>{msg['texto']}</div>", unsafe_allow_html=True)
 
             # 🎯 Botões para a resposta da IA
-            if msg["origem"] == "assistant":
-    col1, col2, col3 = st.columns([1, 1, 1])
+    if msg["origem"] == "assistant":
+         col1, col2, col3 = st.columns([1, 1, 1])
 
     with col1:
         if st.button("👍", key=f"like_{i}", help="Gostei"):
