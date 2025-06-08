@@ -27,13 +27,14 @@ st.write("DOMAIN:", st.secrets["AUTH0"].get("DOMAIN"))
 
 
 
+auth0_secrets = st.secrets.get("AUTH0", {})
+
 auth0 = OAuth2Component(
-    client_id=st.secrets["AUTH0"]["CLIENT_ID"],
-    client_secret=st.secrets["AUTH0"]["CLIENT_SECRET"],
-    authorize_url=f"https://{st.secrets['AUTH0']['DOMAIN']}/authorize",
-    token_url=f"https://{st.secrets['AUTH0']['DOMAIN']}/oauth/token",
-    redirect_uri=st.secrets["AUTH0"]["REDIRECT_URI"],
-    scope="openid profile email",
+    client_id=auth0_secrets.get("CLIENT_ID"),
+    client_secret=auth0_secrets.get("CLIENT_SECRET"),
+    authorize_endpoint=f"https://{auth0_secrets.get('DOMAIN')}/authorize",
+    token_endpoint=f"https://{auth0_secrets.get('DOMAIN')}/oauth/token",
+    redirect_uri=auth0_secrets.get("REDIRECT_URI"),
     name="auth0"
 )
 
