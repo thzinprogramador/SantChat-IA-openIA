@@ -36,7 +36,7 @@ def load_css():
             --color-accent: {COR_PRIMARIA};
             --color-accent-hover: {COR_BOTAO_HOVER};
             --color-button-bg: {COR_SECUNDARIA};
-            --color-button-text: #ffffff;
+            --color-button-text: #002982;
             --color-shadow: rgba(0,0,0,0.05);
             --radius: 8px;
             --spacing: 1rem;
@@ -62,7 +62,7 @@ def load_css():
             right: 0;
             height: var(--header-height);
             background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px #002982;
             display: flex;
             align-items: center;
             padding: 0 20px;
