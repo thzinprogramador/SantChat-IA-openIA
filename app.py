@@ -62,7 +62,7 @@ def load_css():
             right: 0;
             height: var(--header-height);
             background: white;
-            box-shadow: 0 2px 10px #002982;
+            box-shadow: 0 2px 10px rgba(0, 52, 122, 1);
             display: flex;
             align-items: center;
             padding: 0 20px;
