@@ -154,14 +154,20 @@ def main():
 
             # 🎯 Botões para a resposta da IA
             if msg["origem"] == "assistant":
-                c1, c2, c3, c4, c5 = st.columns(5)
-                with c1: st.button("📋", key=f"copy_{i}", help="Copiar resposta")
-                with c2: st.button("🔈", key=f"voz_{i}", help="Ler em voz alta (em breve)")
-                with c3: st.button("👍", key=f"like_{i}", help="Gostei")
-                with c4: st.button("👎", key=f"dislike_{i}", help="Não gostei")
-                with c5:
-                    if st.button("💬", key=f"fb_btn_{i}", help="Enviar feedback"):
-                        st.session_state[f"fb_{i}"] = True
+             # 🎯 Linha de botões estilizada
+                st.markdown(f"""
+                <div style="display: flex; gap: 12px; margin: 6px 0;">
+                    <button onclick="navigator.clipboard.writeText(`{msg['texto']}`)" style="padding:6px 10px;border:1px solid #444;background:#222;color:#ccc;border-radius:5px;">📋</button>
+                    <button disabled style="padding:6px 10px;border:1px solid #444;background:#222;color:#777;border-radius:5px;">🔈</button>
+                    <button style="padding:6px 10px;border:1px solid #444;background:#222;color:#ccc;border-radius:5px;">👍</button>
+                    <button style="padding:6px 10px;border:1px solid #444;background:#222;color:#ccc;border-radius:5px;">👎</button>
+                    <button onclick="document.getElementById('fb_{i}').style.display='block';" style="padding:6px 10px;border:1px solid #444;background:#222;color:#ccc;border-radius:5px;">💬</button>
+                </div>
+                <div id="fb_{i}" style="display:none; margin-top: 5px;">
+                    <input type="text" name="feedback" placeholder="Digite seu feedback" style="width: 70%; padding: 5px; margin-right: 5px; border-radius: 4px; border:1px solid #444;">
+                </div>
+                """, unsafe_allow_html=True)
+
 
                 # 💬 Campo de feedback (expande ao clicar)
                 if st.session_state.get(f"fb_{i}"):
