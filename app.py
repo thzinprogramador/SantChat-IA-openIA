@@ -11,7 +11,7 @@ from firebase_admin import credentials, db
 # --- Configurações iniciais ---
 st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
 
-# Aplicar o CSS personalizado
+# Aplicar o CSS personalizado com a paleta de cores correta
 st.markdown("""
 <style>
   :root {
@@ -20,7 +20,7 @@ st.markdown("""
     --color-text-secondary: #555555;
     --color-accent: #ec0000;  /* Vermelho Santander */
     --color-accent-hover: #c50000;
-    --color-button-bg: #222222;  /* Azul escuro Santander */
+    --color-button-bg: #002c5f;  /* Azul escuro Santander */
     --color-button-text: #ffffff;
     --color-shadow: rgba(0,0,0,0.05);
     --radius: 8px;
@@ -69,8 +69,8 @@ st.markdown("""
   
   .login-btn {
     margin-left: auto;
-    background: var(--color-accent);
-    color: white;
+    background: var(--color-button-bg);
+    color: var(--color-button-text);
     border: none;
     border-radius: var(--radius);
     padding: 8px 20px;
@@ -80,7 +80,7 @@ st.markdown("""
   }
   
   .login-btn:hover {
-    background: var(--color-accent-hover);
+    background: var(--color-accent);
     transform: translateY(-1px);
   }
   
@@ -92,7 +92,7 @@ st.markdown("""
   }
   
   .welcome-title {
-    color: var(--color-welcome);
+    color: var(--color-button-bg);
     font-size: 2.2rem;
     margin-bottom: 10px;
   }
@@ -128,7 +128,7 @@ st.markdown("""
     margin: 10px auto 10px 0;
     max-width: 80%;
     box-shadow: 0 1px 3px var(--color-shadow);
-    border-left: 4px solid var(--color-accent);
+    border-left: 4px solid var(--color-welcome);
   }
   
   .feedback-buttons {
@@ -161,6 +161,21 @@ st.markdown("""
     border-right: 1px solid #eee;
   }
   
+  .stTextInput>div>div>input {
+    border: 1px solid var(--color-button-bg) !important;
+    border-radius: var(--radius) !important;
+  }
+  
+  .stButton>button {
+    background-color: var(--color-button-bg) !important;
+    color: var(--color-button-text) !important;
+    border-radius: var(--radius) !important;
+  }
+  
+  .stButton>button:hover {
+    background-color: var(--color-accent) !important;
+  }
+  
   @media (max-width: 768px) {
     .header {
       padding: 0 15px;
@@ -177,20 +192,6 @@ st.markdown("""
   }
 </style>
 """, unsafe_allow_html=True)
-
-# --- Header Fixo ---
-header = st.container()
-with header:
-    st.markdown("""
-    <div class="header">
-        <div class="logo">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Santander_Bank_logo.svg/1200px-Santander_Bank_logo.svg.png" alt="Santander Logo">
-            SantChat
-        </div>
-        <button class="login-btn" onclick="window.loginClicked()">Entrar</button>
-    </div>
-    <div style="height: 80px;"></div>
-    """, unsafe_allow_html=True)
 
 # --- Firebase Initialization ---
 if not firebase_admin._apps:
@@ -336,8 +337,23 @@ def main():
             "user_id": f"guest-{uuid.uuid4().hex[:6]}",
             "show_login": False,
             "memoria": carregar_memoria(),
-            "historico": []
+            "historico": [],
+            "messages": [
+                {"role": "bot", "text": "Sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços. Em que posso te ajudar hoje?"}
+            ]
         })
+
+    # --- Header Fixo ---
+    st.markdown("""
+    <div class="header">
+        <div class="logo">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Santander_Bank_logo.svg/1200px-Santander_Bank_logo.svg.png" alt="Santander Logo">
+            SantChat
+        </div>
+        <button class="login-btn" onclick="window.loginClicked()">Entrar</button>
+    </div>
+    <div style="height: 80px;"></div>
+    """, unsafe_allow_html=True)
 
     # JavaScript para o botão de login
     st.markdown("""
@@ -370,7 +386,7 @@ def main():
                 padding-top: 20px;
             }
             .sidebar-title {
-                color: var(--color-accent);
+                color: var(--color-button-bg);
                 font-size: 1.5rem;
                 margin-bottom: 20px;
             }
@@ -385,18 +401,28 @@ def main():
             senha = st.text_input("Senha", type="password")
             
             if st.button("Entrar", key="login_btn"):
-                # Lógica de autenticação aqui
-                st.session_state.show_login = False
-                st.success("Login realizado com sucesso!")
-                st.rerun()
+                sucesso, usuario, msg = autenticar_usuario(email, senha)
+                if sucesso:
+                    st.session_state.user_type = "user"
+                    st.session_state.user_id = email.split("@")[0].lower()
+                    st.session_state.show_login = False
+                    st.success(msg)
+                    st.rerun()
+                else:
+                    st.error(msg)
             
             st.divider()
             st.subheader("Criar conta")
             new_email = st.text_input("Novo e-mail")
             new_pass = st.text_input("Nova senha", type="password")
             if st.button("Registrar"):
-                # Lógica de criação de conta aqui
-                st.success("Conta criada com sucesso!")
+                sucesso, msg = criar_usuario(new_email, new_pass)
+                if sucesso:
+                    st.success(msg)
+                    st.session_state.show_login = False
+                    st.rerun()
+                else:
+                    st.error(msg)
         
         menu_itens = ["Chat"]
         if st.session_state.get("user_type") == "dev":
@@ -415,18 +441,38 @@ def main():
         <p class="welcome-subtitle">Seu chat inteligente, com histórico, feedback e memória para usuários dev.</p>
     """, unsafe_allow_html=True)
 
-    if choice == "Chat":
-        # Lógica do chat aqui
-        st.markdown("""
-        <div class="chat-container">
-            <div class="bot-msg">
-                Sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.
-                <br><br>
-                Em que posso te ajudar hoje?
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
+    # Área do chat
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+    
+    # Exibir mensagens existentes
+    for msg in st.session_state.messages:
+        if msg["role"] == "bot":
+            st.markdown(f'<div class="bot-msg">{msg["text"]}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="user-msg">{msg["text"]}</div>', unsafe_allow_html=True)
+    
+    # Input do usuário
+    user_input = st.text_input("Digite sua mensagem:", key="user_input", placeholder="Como posso ajudar?")
+    
+    if st.button("Enviar") and user_input:
+        # Adicionar mensagem do usuário ao histórico
+        st.session_state.messages.append({"role": "user", "text": user_input})
+        
+        # Gerar resposta do bot
+        resposta = gerar_resposta(st.session_state.memoria, user_input)
+        
+        # Adicionar resposta ao histórico
+        st.session_state.messages.append({"role": "bot", "text": resposta})
+        
+        # Salvar no histórico do Firebase se não for convidado
+        if st.session_state.user_type != "guest":
+            salvar_historico(st.session_state.user_id, st.session_state.messages)
+        
+        # Limpar input e recarregar a página para mostrar as novas mensagens
+        st.session_state.user_input = ""
+        st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
