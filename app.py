@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import openai
 import requests
 import firebase_admin
-from datetime import datetime
 from firebase_admin import credentials, db
 from streamlit_auth0 import login_button
 
@@ -15,20 +14,10 @@ st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
 
 # --- Firebase Initialization ---
 if not firebase_admin._apps:
-    firebase_key = { k: (v.replace("\\n","\n") if k=="private_key" else v)
-                     for k,v in st.secrets["FIREBASE_KEY"].items() }
+    firebase_key = {k: (v.replace("\\n", "\n") if k == "private_key" else v)
+                    for k, v in st.secrets["FIREBASE_KEY"].items()}
     firebase_admin.initialize_app(credentials.Certificate(firebase_key),
                                   {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]})
-
-# auth0_response = login_button(
-    #client_id=st.secrets["AUTH0"].get("CLIENT_ID"),
-    #domain=st.secrets["AUTH0"].get("DOMAIN"),
-    #redirect_uri=st.secrets["AUTH0"].get("REDIRECT_URI")
-#)
-
-# Autenticador google (por enquanto)
-
-
 
 # --- API Key OpenRouter ---
 OPENROUTER_KEY = st.secrets["OPENROUTER_KEY"]
@@ -59,7 +48,6 @@ def carregar_memoria():
 def salvar_memoria(mem):
     db.reference("memoria_global").set(mem)
 
-# 💬 Salva feedbacks no Firebase
 def salvar_feedback(user_id, pergunta, resposta, comentario):
     ref = db.reference(f"logs/feedbacks/{user_id}")
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -69,7 +57,6 @@ def salvar_feedback(user_id, pergunta, resposta, comentario):
         "feedback": comentario
     })})
 
-# 🧾 Salva histórico de conversas após 2h de inatividade
 def salvar_historico(user_id, historico):
     if not historico:
         return
@@ -82,11 +69,9 @@ def salvar_historico(user_id, historico):
         "timestamp": ts
     })
 
-# 🔐 Define quem é desenvolvedor
 def desbloquear_memoria_e_feed(user_id):
     return user_id in DEVS
 
-# 🤖 Gera resposta com contexto da memória
 def gerar_resposta(memoria, prompt):
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
     system_prompt = f"""
@@ -99,26 +84,19 @@ def gerar_resposta(memoria, prompt):
     msgs.append({"role": "user", "content": prompt})
     resp = requests.post(
         "https://openrouter.ai/api/v1/chat/completions",
-        headers={"Authorization":f"Bearer {OPENROUTER_KEY}",
-                 "Content-Type":"application/json"},
-        json={"model":"nousresearch/deephermes-3-mistral-24b-preview:free",
-              "messages":msgs, "max_tokens":500, "temperature":0.7})
+        headers={"Authorization": f"Bearer {OPENROUTER_KEY}",
+                 "Content-Type": "application/json"},
+        json={"model": "nousresearch/deephermes-3-mistral-24b-preview:free",
+              "messages": msgs, "max_tokens": 500, "temperature": 0.7})
     if resp.status_code != 200:
         return f"Erro: {resp.status_code}"
     return resp.json()["choices"][0]["message"]["content"].strip()
 
 # --- Interface ---
 def main():
-    # 🎨 Estilo visual (tema escuro + layout fixo)
     st.markdown("""<style>
     body { background:#111; color:#eee; }
-    .chat-header {
-    position: sticky;  /* em vez de fixed */
-    top: 0;
-    background: #111;
-    z-index: 1000;
-    }
-
+    .chat-header { position: sticky; top: 0; background: #111; z-index: 1000; }
     .chat-header h1 { color:#ec0000; }
     .disclaimer { position:fixed; bottom:0; width:100%; text-align:center; color:#888; padding:10px; background:#111; }
     section.main > div:has(div[data-testid="stChatInput"]) {
@@ -132,124 +110,95 @@ def main():
         background:#222; color:#eee; padding:10px;
         border-radius:10px; margin:8px auto 8px 0; max-width:80%;
     }
-    /* Botões mais compactos */
     button[kind="secondary"] {
         padding: 0.2rem 0.5rem !important;
         margin: 0.1rem !important;
     }
-    /* Espaçamento entre colunas */
-    .stColumns > div {
-        gap: 0.5rem;
-    }
+    .stColumns > div { gap: 0.5rem; }
     button[kind="secondary"]:hover {
         background-color:#333!important; color:#fff!important;
     }
     </style>""", unsafe_allow_html=True)
 
     # --- Login ou acesso anônimo ---
-if "auth_mode" not in st.session_state:
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🔐 Entrar com Google"):
-            token = auth0_response
-            if token:
-                user_info = requests.get(
-                    f"https://{st.secrets['AUTH0']['DOMAIN']}/userinfo",
-                    headers={"Authorization": f"Bearer {token['access_token']}"}
-                ).json()
-                st.session_state["auth_mode"] = "google"
-                st.session_state["user_email"] = user_info["email"]
-                st.session_state["user_id"] = user_info["email"]
+    if "auth_mode" not in st.session_state:
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔐 Entrar com Google"):
+                token = None  # substitua se usar login_button
+                if token:
+                    user_info = requests.get(
+                        f"https://{st.secrets['AUTH0']['DOMAIN']}/userinfo",
+                        headers={"Authorization": f"Bearer {token['access_token']}"}
+                    ).json()
+                    st.session_state["auth_mode"] = "google"
+                    st.session_state["user_email"] = user_info["email"]
+                    st.session_state["user_id"] = user_info["email"]
+                    st.rerun()
+        with col2:
+            if st.button("🚪 Continuar como convidado"):
+                st.session_state["auth_mode"] = "guest"
+                st.session_state["user_id"] = f"guest-{uuid.uuid4().hex[:6]}"
                 st.rerun()
-    with col2:
-        if st.button("🚪 Continuar como convidado"):
-            st.session_state["auth_mode"] = "guest"
-            st.session_state["user_id"] = f"guest-{uuid.uuid4().hex[:6]}"
-            st.rerun()
-    st.stop()
+        st.stop()
 
-# ✅ Inicializa variáveis de estado depois do login
-if "memoria" not in st.session_state:
-    st.session_state.memoria = carregar_memoria()
-if "historico" not in st.session_state:
-    st.session_state.historico = []
-if "ultima_interacao" not in st.session_state:
-    st.session_state.ultima_interacao = datetime.now()
+    # --- Inicialização de estado ---
+    if "memoria" not in st.session_state:
+        st.session_state.memoria = carregar_memoria()
+    if "historico" not in st.session_state:
+        st.session_state.historico = []
+    if "ultima_interacao" not in st.session_state:
+        st.session_state.ultima_interacao = datetime.now()
 
-# ⏱ Timeout de inatividade (2h)
-if datetime.now() - st.session_state.ultima_interacao > timedelta(hours=2):
-    if st.session_state.historico:
+    # --- Timeout de inatividade ---
+    if "ultima_interacao" in st.session_state and datetime.now() - st.session_state.ultima_interacao > timedelta(hours=2):
+        user_id = st.session_state.get("user_id", f"guest-{uuid.uuid4().hex[:6]}")
         salvar_historico(user_id, st.session_state.historico)
         st.session_state.historico = []
-    st.session_state.ultima_interacao = datetime.now()
+        st.session_state.ultima_interacao = datetime.now()
 
-    # Define user_id mesmo se já estiver autenticado
-    user_id = st.session_state.get("user_id", f"guest-{uuid.uuid4().hex[:6]}")
-    is_dev = user_id in DEVS
-
-    # 🧢 Cabeçalho fixo
+    # --- Cabeçalho e menu lateral ---
     st.markdown("<div class='chat-header'><h1>🤖 SantChat</h1><p>IA interna para colaboradores do Santander</p></div>", unsafe_allow_html=True)
 
-    # 🧑 Identificação do usuário
     user_id = obter_id_usuario()
     is_dev = desbloquear_memoria_e_feed(user_id)
 
-    # 🧠 Inicializa estados
-    #if "memoria" not in st.session_state:
-        #st.session_state.memoria = carregar_memoria()
-    #if "historico" not in st.session_state:
-        #st.session_state.historico = []
-    #if "ultima_interacao" not in st.session_state:
-        #st.session_state.ultima_interacao = datetime.now()
-
-
-    # 📂 Menu lateral (com base no tipo de usuário)
     menu = ["Chat"]
     if is_dev:
         menu += ["Memória IA", "Feedbacks", "Configurações"]
     choice = st.sidebar.radio("Menu", menu)
 
     if choice == "Chat":
-        # 🧾 Mostrar histórico de mensagens
         for i, msg in enumerate(st.session_state.historico):
             tipo = "msg-user" if msg["origem"] == "user" else "msg-assistant"
             st.markdown(f"<div class='{tipo}'>{msg['texto']}</div>", unsafe_allow_html=True)
 
-            # 🎯 Botões para a resposta da IA
             if msg["origem"] == "assistant":
                 col1, col2, col3 = st.columns([1, 1, 1])
-
                 with col1:
-                    if st.button("👍", key=f"like_{i}", help="Gostei"):
-                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+                    if st.button("👍", key=f"like_{i}"):
+                        pergunta = st.session_state.historico[i - 1]["texto"] if i > 0 else ""
                         salvar_feedback(user_id, pergunta, msg["texto"], "👍 Gostei")
                         st.success("✅ Avaliação positiva enviada!")
-
                 with col2:
-                    if st.button("👎", key=f"dislike_{i}", help="Não gostei"):
-                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+                    if st.button("👎", key=f"dislike_{i}"):
+                        pergunta = st.session_state.historico[i - 1]["texto"] if i > 0 else ""
                         salvar_feedback(user_id, pergunta, msg["texto"], "👎 Não gostei")
                         st.warning("⚠️ Avaliação negativa registrada.")
-
                 with col3:
-                    if st.button("💬", key=f"fb_btn_{i}", help="Enviar feedback"):
+                    if st.button("💬", key=f"fb_btn_{i}"):
                         st.session_state[f"fb_{i}"] = True
-
-                # 💬 Campo de feedback (expande ao clicar)
                 if st.session_state.get(f"fb_{i}"):
                     feedback = st.text_input("Seu feedback:", key=f"fb_text_{i}")
                     if st.button("Enviar feedback", key=f"send_fb_{i}"):
-                        pergunta = st.session_state.historico[i-1]["texto"] if i > 0 else ""
+                        pergunta = st.session_state.historico[i - 1]["texto"] if i > 0 else ""
                         salvar_feedback(user_id, pergunta, msg["texto"], feedback)
                         st.success("✅ Feedback enviado com sucesso!")
                         st.session_state[f"fb_{i}"] = False
 
-        # 💬 Entrada do usuário
         entrada = st.chat_input("Digite sua mensagem")
         if entrada:
             st.session_state.ultima_interacao = datetime.now()
-
-            # Verifica se é comando /sntevksi
             if entrada.lower().startswith("/sntevksi"):
                 conteudo = entrada[len("/sntevksi"):].strip()
                 if conteudo:
@@ -261,7 +210,6 @@ if datetime.now() - st.session_state.ultima_interacao > timedelta(hours=2):
                     st.session_state.historico.append({"origem": "user", "texto": entrada})
                     st.session_state.historico.append({"origem": "assistant", "texto": "⚠️ Digite algo após /sntevksi para ensinar à IA."})
                 st.rerun()
-
             else:
                 st.session_state.historico.append({"origem": "user", "texto": entrada})
                 resposta = gerar_resposta(st.session_state.memoria, entrada)
@@ -285,8 +233,6 @@ if datetime.now() - st.session_state.ultima_interacao > timedelta(hours=2):
             st.session_state.clear()
             st.experimental_rerun()
 
-
-    # ⚠️ Rodapé fixo
     st.markdown("<div class='disclaimer'>⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
