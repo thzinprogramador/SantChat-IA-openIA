@@ -99,7 +99,7 @@ def main():
     col1, col2 = st.columns([1, 5])
     with col1:
         st.markdown("### Menu")
-        st.sidebar.markdown("# 📍 Navegação")
+        st.sidebar.markdown("#Menu")
         menu_itens = ["Chat", "Memória IA", "Feedbacks"]
         choice = st.sidebar.radio("Escolha uma opção", menu_itens)
 
@@ -111,7 +111,7 @@ def main():
     with col2:
         st.markdown("""
             <div style='display: flex; align-items: center; gap: 10px;'>
-                <img src='https://img.icons8.com/emoji/48/robot-emoji.png' width='32'/>
+                <img src='https://img.icons8.com/?size=100&id=lSFUG21G0mE9&format=png&color=000000/>
                 <h1 style='color: red; margin: 0;'>SantChat</h1>
             </div>
             <p style='margin-top: -10px;'>IA interna para colaboradores do Santander</p>
