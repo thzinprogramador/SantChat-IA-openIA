@@ -9,11 +9,11 @@ import firebase_admin
 from firebase_admin import credentials, db
 
 # --- Configurações de Cores ---
-COR_PRIMARIA = "#FF0000"  # Vermelho Santander
-COR_SECUNDARIA = "#002982"  # Azul escuro
-COR_TERCIARIA = "#00F238"  # Verde água
-COR_TEXTO = "#00F238"
-COR_FUNDO = "#002982"
+COR_PRIMARIA = "#ec0000"  # Vermelho Santander
+COR_SECUNDARIA = "#222222"  # Azul escuro
+COR_TERCIARIA = "#00a5a8"  # Verde água
+COR_TEXTO = "#333333"
+COR_FUNDO = "#f8f9fa"  # Fundo mais claro
 COR_BOTAO = "#ec0000"
 COR_BOTAO_HOVER = "#c50000"
 
@@ -119,13 +119,14 @@ def load_css():
         }}
         
         .chat-container {{
-            background: #f9f9f9;
+            background: white;
             border-radius: var(--radius);
             padding: 20px;
             margin-bottom: 20px;
             min-height: 300px;
             max-height: 500px;
             overflow-y: auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }}
         
         .user-msg {{
@@ -217,6 +218,24 @@ def load_css():
             font-weight: 600;
             color: var(--color-accent);
             margin-bottom: 20px;
+            font-size: 1.2rem;
+        }}
+        
+        .new-chat-btn {{
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 10px;
+            width: 100%;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }}
+        
+        .new-chat-btn:hover {{
+            background: var(--color-accent-hover);
         }}
         
         @media (max-width: 768px) {{
@@ -240,6 +259,33 @@ def load_css():
         }}
         .block-container {{
             padding-top: 0 !important;
+        }}
+        
+        /* Estilo do menu lateral */
+        .sidebar .sidebar-content {{
+            background-color: {COR_FUNDO};
+            padding: 20px;
+        }}
+        
+        /* Estilo das abas */
+        .stRadio > div {{
+            flex-direction: column;
+            align-items: flex-start;
+        }}
+        
+        .stRadio > div > label {{
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+        }}
+        
+        .stRadio > div > label:hover {{
+            background-color: #f0f0f0;
+        }}
+        
+        .stRadio > div > label > div:first-child {{
+            padding-left: 8px;
         }}
     </style>
     """, unsafe_allow_html=True)
@@ -421,9 +467,11 @@ def render_header():
 
 def render_login_sidebar():
     with st.sidebar:
+        st.markdown('<button class="new-chat-btn">+ Novo chat</button>', unsafe_allow_html=True)
+        
         if st.session_state.get("user_type") != "guest":
             user_name = st.session_state.get("user_data", {}).get("nome_usuario", "Usuário")
-            st.markdown(f'<div class="user-greeting">Olá, {user_name}!</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="user-greeting">👋 Olá, {user_name}!</div>', unsafe_allow_html=True)
         
         st.markdown(f"""
         <div class="sidebar-content">
