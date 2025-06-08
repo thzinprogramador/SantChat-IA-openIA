@@ -24,6 +24,9 @@ if not firebase_admin._apps:
 st.write("CLIENT_ID:", st.secrets.get("AUTH0_CLIENT_ID"))
 st.write("DOMAIN:", st.secrets.get("AUTH0_DOMAIN"))
 st.write("AUTH0 dict:", st.secrets.get("AUTH0", {}))
+st.write("Chaves disponíveis em st.secrets:", list(st.secrets.keys()))
+st.write("auth0:", st.secrets.get("auth0"))
+
 
 
 auth0 = OAuth2Component(
