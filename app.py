@@ -42,7 +42,9 @@ def salvar_memoria(memoria):
         ref = db.reference("memoria_global")
         ref.set(memoria)
     except Exception as e:
-        print(f"Erro ao salvar memória: {e}")
+    st.error(f"Erro ao salvar memória: {e}")
+    print(f"Erro ao salvar memória: {e}")
+
 
 # 📝 Log por IP
 def salvar_log(ip, conteudo):
@@ -51,7 +53,8 @@ def salvar_log(ip, conteudo):
         ref = db.reference(f"logs/{ip.replace(':', '_')}")
         ref.update({agora: conteudo})
     except Exception as e:
-        print(f"Erro ao salvar log: {e}")
+    st.error(f"Erro ao salvar log: {e}")
+    print(f"Erro ao salvar log: {e}")   
 
 # 🌐 IP do usuário
 def obter_ip():
@@ -142,15 +145,23 @@ def main():
 
         # 🧠 Comando especial para aprendizado global
         if entrada_usuario.lower().startswith("/sntevksi"):
-            novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
-            if novo_conhecimento:
-                st.session_state.memoria.append(novo_conhecimento)
-                salvar_memoria(st.session_state.memoria)
-                resposta = "✅ Conhecimento adicionado à memória global!"
-            else:
-                resposta = "⚠️ Por favor, escreva algo após o comando /sntevksi."
-        else:
-            resposta = gerar_resposta(st.session_state.memoria, entrada_usuario)
+    novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
+    if novo_conhecimento:
+        try:
+            st.session_state.memoria.append(novo_conhecimento)
+            st.write("🧠 Novo conhecimento adicionado à memória:", novo_conhecimento)
+            salvar_memoria(st.session_state.memoria)
+            memoria_check = carregar_memoria()
+            st.write("📦 Memória após salvar:", memoria_check)
+            resposta = "✅ Conhecimento adicionado à memória global!"
+        except Exception as e:
+            st.error(f"❌ Erro ao salvar memória: {e}")
+            resposta = "⚠️ Ocorreu um erro ao tentar salvar a memória."
+    else:
+        resposta = "⚠️ Por favor, escreva algo após o comando /sntevksi."
+else:
+    resposta = gerar_resposta(st.session_state.memoria, entrada_usuario)
+
 
         # 🧾 Atualiza histórico e log
         st.session_state.historico.append({"user": entrada_usuario, "bot": resposta})
