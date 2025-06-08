@@ -145,24 +145,23 @@ def main():
         salvar_log(ip_usuario, f"Usuário: {entrada_usuario}")
 
         # 🧠 Comando especial para aprendizado global
-if entrada_usuario.lower().startswith("/sntevksi"):
-    novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
-    if novo_conhecimento:
-        try:
-            st.session_state.memoria.append(novo_conhecimento)
-            st.write("🧠 Novo conhecimento adicionado à memória:", novo_conhecimento)
-            salvar_memoria(st.session_state.memoria)
-            memoria_check = carregar_memoria()
-            st.write("📦 Memória após salvar:", memoria_check)
-            resposta = "✅ Conhecimento adicionado à memória global!"
-        except Exception as e:
-            st.error(f"❌ Erro ao salvar memória: {e}")
-            resposta = "⚠️ Ocorreu um erro ao tentar salvar a memória."
-    else:
-        resposta = "⚠️ Por favor, escreva algo após o comando /sntevksi."
-else:
-    resposta = gerar_resposta(st.session_state.memoria, entrada_usuario)
-
+        if entrada_usuario.lower().startswith("/sntevksi"):
+            novo_conhecimento = entrada_usuario[len("/sntevksi"):].strip()
+            if novo_conhecimento:
+                try:
+                    st.session_state.memoria.append(novo_conhecimento)
+                    st.write("🧠 Novo conhecimento adicionado à memória:", novo_conhecimento)
+                    salvar_memoria(st.session_state.memoria)
+                    memoria_check = carregar_memoria()
+                    st.write("📦 Memória após salvar:", memoria_check)
+                    resposta = "✅ Conhecimento adicionado à memória global!"
+                except Exception as e:
+                    st.error(f"❌ Erro ao salvar memória: {e}")
+                    resposta = "⚠️ Ocorreu um erro ao tentar salvar a memória."
+            else:
+                resposta = "⚠️ Por favor, escreva algo após o comando /sntevksi."
+        else:
+            resposta = gerar_resposta(st.session_state.memoria, entrada_usuario)
 
         # 🧾 Atualiza histórico e log
         st.session_state.historico.append({"user": entrada_usuario, "bot": resposta})
@@ -172,6 +171,7 @@ else:
             st.markdown(entrada_usuario)
         with st.chat_message("assistant"):
             st.markdown(resposta)
+
 
 # 🟢 Inicia app
 if __name__ == "__main__":
