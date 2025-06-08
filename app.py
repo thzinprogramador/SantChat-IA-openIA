@@ -31,7 +31,6 @@ if not firebase_admin._apps:
         "databaseURL": "https://santchat-ia-default-rtdb.firebaseio.com"
     })
 
-
 # 🔑 Configurações de segurança e API
 OPENROUTER_KEY = st.secrets["OPENROUTER_KEY"]
 SENHA_ATIVADA = str(st.secrets.get("SENHA_ATIVADA", "false")).lower() == "true"
@@ -59,7 +58,6 @@ def salvar_memoria(memoria):
         st.error(f"Erro ao salvar memória: {e}")
         print(f"Erro ao salvar memória: {e}")
 
-
 # 🛠 Salva erros globais no Firebase
 def salvar_erro(erro, contexto="geral"):
     try:
@@ -69,7 +67,6 @@ def salvar_erro(erro, contexto="geral"):
     except Exception as e:
         print(f"Falha ao salvar log de erro: {e}")
 
-
 # 📝 Log por IP
 def salvar_log(ip, conteudo):
     try:
@@ -78,7 +75,7 @@ def salvar_log(ip, conteudo):
         ref.update({agora: conteudo})
     except Exception as e:
         st.error(f"Erro ao salvar log: {e}")
-        print(f"Erro ao salvar log: {e}")   
+        print(f"Erro ao salvar log: {e}")
 
 # 🌐 IP do usuário
 def obter_ip():
@@ -129,62 +126,55 @@ def gerar_resposta(memoria, prompt):
         salvar_erro(e, contexto="resposta_ia")
         return f"Erro na API: {str(e)}"
 
-
 # 🚀 Interface principal
-def main():   
+def main():
+    # 🎨 Tema escuro + design responsivo
     st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
-    st.markdown("<h1 style='text-align: center;'>SantChat - IA Interna Santander</h1>", unsafe_allow_html=True)
+    st.markdown("""
+        <style>
+            html, body {
+                background-color: #1e1e1e;
+                color: #f0f0f0;
+            }
+            .stChatMessage {
+                padding: 10px 15px;
+                border-radius: 10px;
+                margin-bottom: 10px;
+            }
+            .chat-header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .chat-header h1 {
+                color: #f33;
+                font-size: 2em;
+            }
+            .chat-header p {
+                color: #ccc;
+                margin-top: -10px;
+                font-size: 1em;
+            }
+            .disclaimer {
+                text-align: center;
+                font-size: 0.9em;
+                color: #888;
+                margin-top: 40px;
+                padding-top: 15px;
+                border-top: 1px solid #444;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-#  Estilo responsivo e visual moderno
-st.markdown("""
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .stChatMessage {
-            padding: 10px 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-        }
-        .chat-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .chat-header h1 {
-            color: #d92525;
-            font-size: 2em;
-        }
-        .chat-header p {
-            color: #555;
-            margin-top: -10px;
-            font-size: 1em;
-        }
-        .disclaimer {
-            text-align: center;
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 40px;
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
-        }
-    </style>
-""", unsafe_allow_html=True)
+    # 🎯 Cabeçalho
+    st.markdown("""
+        <div class='chat-header'>
+            <h1>🤖 SantChat</h1>
+            <p>IA interna para colaboradores do Santander</p>
+        </div>
+    """, unsafe_allow_html=True)
 
-# 🎯 Cabeçalho com título e subtítulo
-st.markdown("""
-    <div class='chat-header'>
-        <h1>🤖 SantChat</h1>
-        <p>IA interna para colaboradores do Santander</p>
-    </div>
-""", unsafe_allow_html=True)
-
-
-    # 🔑 Validaçao de key
-    
-
-    
-# 🔒 Validação da senha (opcional)
-if SENHA_ATIVADA:
+    # 🔒 Validação da senha (opcional)
+    if SENHA_ATIVADA:
         if "senha_valida" not in st.session_state:
             senha_input = st.text_input("Digite a senha:", type="password")
             if st.button("Entrar"):
@@ -247,6 +237,12 @@ if SENHA_ATIVADA:
         with st.chat_message("assistant"):
             st.markdown(resposta)
 
+    # ⚠️ Rodapé estilo ChatGPT
+    st.markdown("""
+        <div class="disclaimer">
+            ⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.
+        </div>
+    """, unsafe_allow_html=True)
 
 # 🟢 Inicia app
 if __name__ == "__main__":
