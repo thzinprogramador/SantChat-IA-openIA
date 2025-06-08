@@ -9,11 +9,11 @@ import firebase_admin
 from firebase_admin import credentials, db
 
 # --- Configurações de Cores ---
-COR_PRIMARIA = "#ec0000"  # Vermelho Santander
-COR_SECUNDARIA = "#222222"  # Azul escuro
-COR_TERCIARIA = "#00a5a8"  # Verde água
-COR_TEXTO = "#333333"
-COR_FUNDO = "#ffffff"
+COR_PRIMARIA = "#FF0000"  # Vermelho Santander
+COR_SECUNDARIA = "#002982"  # Azul escuro
+COR_TERCIARIA = "#00F238"  # Verde água
+COR_TEXTO = "#00F238"
+COR_FUNDO = "#002982"
 COR_BOTAO = "#ec0000"
 COR_BOTAO_HOVER = "#c50000"
 
