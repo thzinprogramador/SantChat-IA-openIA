@@ -21,11 +21,9 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(credentials.Certificate(firebase_key),
                                   {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]})
 
-st.write("CLIENT_ID:", st.secrets.get("AUTH0_CLIENT_ID"))
-st.write("DOMAIN:", st.secrets.get("AUTH0_DOMAIN"))
-st.write("AUTH0 dict:", st.secrets.get("AUTH0", {}))
-st.write("Chaves disponíveis em st.secrets:", list(st.secrets.keys()))
-st.write("auth0:", st.secrets.get("auth0"))
+st.write("st.secrets.AUTH0:", st.secrets["AUTH0"])
+st.write("CLIENT_ID:", st.secrets["AUTH0"].get("CLIENT_ID"))
+st.write("DOMAIN:", st.secrets["AUTH0"].get("DOMAIN"))
 
 
 
