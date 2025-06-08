@@ -130,48 +130,69 @@ def gerar_resposta(memoria, prompt):
 def main():
     # 🎨 Tema escuro + design responsivo
     st.set_page_config(page_title="SantChat", page_icon="🤖", layout="centered")
+        # 🎨 Tema escuro + estilo fixo
     st.markdown("""
         <style>
+            /* Define o fundo e texto padrão */
             html, body {
                 background-color: #1e1e1e;
                 color: #f0f0f0;
+                font-family: 'Segoe UI', sans-serif;
             }
-            .stChatMessage {
-                padding: 10px 15px;
-                border-radius: 10px;
-                margin-bottom: 10px;
-            }
+
+            /* Cabeçalho fixo no topo */
             .chat-header {
+                position: sticky;
+                top: 0;
+                background-color: #1e1e1e;
+                padding: 15px 0;
                 text-align: center;
-                margin-bottom: 20px;
+                border-bottom: 1px solid #444;
+                z-index: 999;
             }
+
             .chat-header h1 {
-                color: #f33;
-                font-size: 2em;
+                color: #ff4b4b;
+                font-size: 1.7em;
+                margin-bottom: 0;
             }
+
             .chat-header p {
                 color: #ccc;
-                margin-top: -10px;
-                font-size: 1em;
+                font-size: 0.9em;
+                margin-top: 5px;
             }
+
+            /* Rodapé estilo aviso fixo abaixo da área de mensagens */
             .disclaimer {
-                text-align: center;
                 font-size: 0.9em;
                 color: #888;
-                margin-top: 40px;
-                padding-top: 15px;
+                text-align: center;
+                padding: 15px 10px;
                 border-top: 1px solid #444;
+                margin-top: 20px;
+            }
+
+            /* Espaço entre entrada e rodapé */
+            .block-container {
+                padding-bottom: 80px !important;
+            }
+
+            /* Deixe a barra de mensagem visível sempre */
+            section.main > div:has(div[data-testid="stChatInput"]) {
+                padding-bottom: 0 !important;
             }
         </style>
     """, unsafe_allow_html=True)
 
-    # 🎯 Cabeçalho
+    # 🎯 Cabeçalho fixo
     st.markdown("""
         <div class='chat-header'>
-            <h1>🤖 SantChat</h1>
+            <h1>🤖 <span style="color: #ff4b4b;">SantChat</span></h1>
             <p>IA interna para colaboradores do Santander</p>
         </div>
     """, unsafe_allow_html=True)
+
 
     # 🔒 Validação da senha (opcional)
     if SENHA_ATIVADA:
@@ -243,8 +264,9 @@ if __name__ == "__main__":
     main()
     
 # ⚠️ Rodapé estilo ChatGPT
-    st.markdown("""
-        <div class="disclaimer">
-            ⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.
-        </div>
-    """, unsafe_allow_html=True)
+st.markdown("""
+    <div class="disclaimer">
+         ⚠️ O SantChat pode cometer erros. Verifique informações importantes antes de tomar decisões.
+    </div>
+""", unsafe_allow_html=True)
+
