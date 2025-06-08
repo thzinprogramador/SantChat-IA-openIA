@@ -77,11 +77,15 @@ def desbloquear_memoria_e_feed(user_id):
 
 # 🤖 Gera resposta com contexto da memória
 def gerar_resposta(memoria, prompt):
-    now = datetime.now().strftime("%d/%m/%Y %H:%M")
-    msgs = [{"role":"system","content":"Você é o SantChat, IA interna do Santander."}]
+    agora = datetime.now().strftime("%d/%m/%Y %H:%M")
+    system_prompt = f"""
+    Hoje é {agora}. Você é o SantChat, IA oficial do Santander.
+    Responda com clareza, sem inventar informações sobre datas.
+    """
+    msgs = [{"role": "system", "content": system_prompt.strip()}]
     if memoria:
-        msgs.append({"role":"system","content": "\n".join(memoria)})
-    msgs.append({"role":"user","content": prompt})
+        msgs.append({"role": "system", "content": "\n".join(memoria)})
+    msgs.append({"role": "user", "content": prompt})
     resp = requests.post(
         "https://openrouter.ai/api/v1/chat/completions",
         headers={"Authorization":f"Bearer {OPENROUTER_KEY}",
