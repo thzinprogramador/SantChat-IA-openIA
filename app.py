@@ -125,12 +125,8 @@ def load_css():
         .chat-container {{
             background: #333333;
             border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 20px;
-            min-height: 300px;
-            max-height: 500px;
             overflow-y: auto;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: rgba(0,0,0,0.1);
             border: 1px solid #444;
         }}
         
@@ -521,24 +517,14 @@ def gerar_resposta(memoria, prompt, user_name=None, historico_conversa=None):
 
 # --- Componentes da UI ---
 def render_header():
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        st.markdown(f"""
+    st.markdown(f"""
+    <div class="header">
         <div class="logo">
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Santander_Bank_logo.svg/1200px-Santander_Bank_logo.svg.png" alt="Santander Logo">
             <span style="color: {COR_PRIMARIA}">SantChat</span>
         </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        if st.session_state.get("user_type") == "guest":
-            if st.button("Entrar", key="header_login_btn", use_container_width=True):
-                st.session_state.show_login = True
-                st.rerun()
-        else:
-            if st.button("Sair", key="header_logout_btn", use_container_width=True):
-                st.session_state.clear()
-                st.rerun()
+    </div>
+    """, unsafe_allow_html=True)
 
 def render_login_sidebar():
     with st.sidebar:
@@ -759,7 +745,6 @@ def render_chat_interface():
             placeholder="Digite sua mensagem e pressione Enter ou clique em Enviar",
             label_visibility="collapsed"
         )
-        
         col1, col2 = st.columns([1, 0.2])
         with col1:
             submit_button = st.form_submit_button(label="Enviar", use_container_width=True)
@@ -768,7 +753,7 @@ def render_chat_interface():
                 user_input = ""
                 st.rerun()
         
-        if (submit_button or user_input) and user_input:
+        if submit_button and user_input:
             # Verificar se é um comando de dev
             user_data = st.session_state.get("user_data", {})
             success, msg = processar_comando_dev(user_input, user_data)
