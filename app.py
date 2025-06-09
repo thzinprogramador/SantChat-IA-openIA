@@ -722,16 +722,16 @@ def render_chat_interface():
             ]
 
         for idx, message in enumerate(st.session_state.messages):
+            raw_text = message.get("text", "")
+            raw_text = raw_text.replace("`**", "**").replace("**`", "**")
+
             if message["sender"] == "user":
                 st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
             else:
-                raw_text = message.get("text", "")
-                raw_text = raw_text.replace("`**", "**").replace("**`", "**")
-                st.markdown(f"""
-            <div class="bot-msg">
-            {raw_text}
-            </div>
-            """, unsafe_allow_html=True)
+                st.markdown('<div class="bot-msg">', unsafe_allow_html=True)
+                st.markdown(raw_text)  # Aqui o Markdown será interpretado corretamente
+                st.markdown('</div>', unsafe_allow_html=True)
+
 
 
                 
