@@ -433,19 +433,24 @@ def criar_usuario(email, senha, nome_usuario):
 
 def autenticar_usuario(email, senha):
     try:
-        user_id = usuario.get("nome_usuario", "").lower()
-        ref = db.reference(f"usuarios/{user_id}")
-        usuario = ref.get()
-        
-        if not usuario:
-            return False, None, "Usuário não encontrado"
-            
-        if usuario.get("senha") != senha:
-            return False, None, "Senha incorreta"
-            
-        return True, usuario, "Login bem-sucedido"
+        # Procurar todos os usuários e comparar e-mail e senha
+        ref = db.reference("usuarios")
+        usuarios = ref.get()
+
+        if not usuarios:
+            return False, None, "Nenhum usuário encontrado no banco de dados."
+
+        for user_id, dados in usuarios.items():
+            if dados.get("email") == email:
+                if dados.get("senha") == senha:
+                    return True, dados, "Login bem-sucedido"
+                else:
+                    return False, None, "Senha incorreta"
+
+        return False, None, "Usuário não encontrado"
     except Exception as e:
         return False, None, f"Erro na autenticação: {str(e)}"
+
 
 def processar_comando_dev(comando, user_data):
     if user_data.get("nivel", 0) != -8:  # Nível de dev
