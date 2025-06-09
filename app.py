@@ -712,12 +712,14 @@ def render_chat_interface():
             st.session_state.messages = [
                 {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
             ]
-        
+
         for idx, message in enumerate(st.session_state.messages):
             if message["sender"] == "user":
                 st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
             else:
-                st.markdown(f'<div class="bot-msg">{message["text"]}</div>', unsafe_allow_html=True)
+                with st.markdown('<div class="bot-msg">', unsafe_allow_html=True):
+                    st.markdown(message["text"])
+                    st.markdown("</div>", unsafe_allow_html=True)
                 
                 # Adicionar botões de feedback apenas para mensagens do bot
                 if idx > 0 and st.session_state.get("user_type") != "guest":
