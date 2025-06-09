@@ -128,7 +128,7 @@ def load_css():
             min-height: 300px;
             max-height: 500px;
             overflow-y: auto;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: rgba(0,0,0,0.1);
             border: 1px solid #444;
         }}
         
