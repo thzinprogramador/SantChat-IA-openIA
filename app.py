@@ -666,6 +666,7 @@ def render_login_sidebar():
 
 def render_memoria_ia():
     st.subheader("Memória Global da IA")
+    st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
     memoria = carregar_memoria()
     
     if st.button("Atualizar Memória"):
@@ -691,6 +692,7 @@ def render_memoria_ia():
 
 def render_feedbacks():
     st.subheader("Feedbacks dos Usuários")
+    st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
     
     try:
         ref = db.reference("logs/feedbacks")
