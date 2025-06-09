@@ -12,8 +12,8 @@ from firebase_admin import credentials, db
 COR_PRIMARIA = "#ec0000"  # Vermelho Santander
 COR_SECUNDARIA = "#222222"  # Azul escuro
 COR_TERCIARIA = "#00F238"  # Verde água
-COR_TEXTO = "#333333"
-COR_FUNDO = "#292A2D"  # Fundo corrigido para #292A2D
+COR_TEXTO = "#FFFFFF"  # Texto branco para contraste com fundo escuro
+COR_FUNDO = "#292A2D"  # Fundo escuro
 COR_BOTAO = "#ec0000"
 COR_BOTAO_HOVER = "#c50000"
 
@@ -32,7 +32,7 @@ def load_css():
         :root {{
             --color-bg: {COR_FUNDO};
             --color-text-primary: {COR_TEXTO};
-            --color-text-secondary: #555555;
+            --color-text-secondary: #CCCCCC;
             --color-accent: {COR_PRIMARIA};
             --color-accent-hover: {COR_BOTAO_HOVER};
             --color-button-bg: {COR_SECUNDARIA};
@@ -42,7 +42,7 @@ def load_css():
             --spacing: 1rem;
             --header-height: 70px;
             --max-width: 1000px;
-            --color-welcome: #FF0000;  /* Cor do texto "Bem-vindo ao SantChat" */
+            --color-welcome: #FF0000;
         }}
         
         body {{
@@ -61,12 +61,13 @@ def load_css():
             left: 0;
             right: 0;
             height: var(--header-height);
-            background: white;
+            background: {COR_FUNDO};
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
             padding: 0 20px;
             z-index: 1000;
+            border-bottom: 1px solid #444;
         }}
         
         .logo {{
@@ -104,6 +105,7 @@ def load_css():
             margin: 0 auto;
             padding: 20px;
             padding-top: calc(var(--header-height) + 20px);
+            background-color: {COR_FUNDO};
         }}
         
         .welcome-title {{
@@ -119,7 +121,7 @@ def load_css():
         }}
         
         .chat-container {{
-            background: white;
+            background: #333333;
             border-radius: var(--radius);
             padding: 20px;
             margin-bottom: 20px;
@@ -127,20 +129,22 @@ def load_css():
             max-height: 500px;
             overflow-y: auto;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #444;
         }}
         
         .user-msg {{
-            background: #e6f2ff;
+            background: #444444;
             color: var(--color-text-primary);
             padding: 12px 16px;
             border-radius: var(--radius);
             margin: 10px 0 10px auto;
             max-width: 80%;
             box-shadow: 0 1px 3px var(--color-shadow);
+            border: 1px solid #555;
         }}
         
         .bot-msg {{
-            background: white;
+            background: #3A3A3A;
             color: var(--color-text-primary);
             padding: 12px 16px;
             border-radius: var(--radius);
@@ -154,10 +158,11 @@ def load_css():
             display: flex;
             gap: 8px;
             margin-top: 10px;
+            justify-content: flex-end;
         }}
         
         .feedback-btn {{
-            background: #f0f0f0;
+            background: #555;
             border: none;
             border-radius: 50%;
             width: 36px;
@@ -167,10 +172,11 @@ def load_css():
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
+            color: white;
         }}
         
         .feedback-btn:hover {{
-            background: #e0e0e0;
+            background: #666;
             transform: scale(1.1);
         }}
         
@@ -183,10 +189,12 @@ def load_css():
         .message-input textarea {{
             flex: 1;
             border-radius: var(--radius);
-            border: 1px solid #ddd;
+            border: 1px solid #555;
             padding: 10px;
             resize: none;
             font-family: inherit;
+            background-color: #333;
+            color: white;
         }}
         
         .message-input button {{
@@ -205,9 +213,12 @@ def load_css():
         }}
         
         /* Sidebar styles */
-        .sidebar-content {{
-            padding-top: 20px;
+        .sidebar .sidebar-content {{
+            background-color: {COR_FUNDO};
+            padding: 20px;
+            border-right: 1px solid #444;
         }}
+        
         .sidebar-title {{
             color: var(--color-accent);
             font-size: 1.5rem;
@@ -238,6 +249,29 @@ def load_css():
             background: var(--color-accent-hover);
         }}
         
+        .chat-history {{
+            margin-top: 20px;
+        }}
+        
+        .chat-history-item {{
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+            transition: all 0.2s;
+        }}
+        
+        .chat-history-item:hover {{
+            background-color: #444;
+        }}
+        
+        .chat-history-item.active {{
+            background-color: var(--color-accent);
+            color: white;
+        }}
+        
         @media (max-width: 768px) {{
             .header {{
                 padding: 0 15px;
@@ -255,16 +289,11 @@ def load_css():
         
         /* Remove o quadrado branco */
         .stApp {{
-            background-color: transparent !important;
+            background-color: {COR_FUNDO} !important;
         }}
         .block-container {{
             padding-top: 0 !important;
-        }}
-        
-        /* Estilo do menu lateral */
-        .sidebar .sidebar-content {{
-            background-color: {COR_FUNDO};
-            padding: 20px;
+            background-color: {COR_FUNDO} !important;
         }}
         
         /* Estilo das abas */
@@ -278,14 +307,20 @@ def load_css():
             padding: 8px 12px;
             border-radius: var(--radius);
             transition: all 0.2s;
+            color: white;
         }}
         
         .stRadio > div > label:hover {{
-            background-color: #f0f0f0;
+            background-color: #444;
         }}
         
         .stRadio > div > label > div:first-child {{
             padding-left: 8px;
+        }}
+        
+        /* Remove borda branca do chat */
+        .stChatMessage {{
+            background-color: transparent !important;
         }}
     </style>
     """, unsafe_allow_html=True)
@@ -318,14 +353,14 @@ def salvar_memoria(mem):
         st.error(f"Erro ao salvar memória: {str(e)}")
         return False
 
-def salvar_feedback(user_id, pergunta, resposta, comentario):
+def salvar_feedback(user_id, pergunta, resposta, feedback, tipo):
     try:
         ref = db.reference(f"logs/feedbacks/{user_id}")
         ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         feedback_data = {
             "pergunta": pergunta,
             "resposta": resposta,
-            "feedback": comentario,
+            "tipo_feedback": tipo,
             "timestamp": datetime.now().isoformat()
         }
         ref.child(ts).set(feedback_data)
@@ -334,23 +369,31 @@ def salvar_feedback(user_id, pergunta, resposta, comentario):
         st.error(f"Erro ao salvar feedback: {str(e)}")
         return False
 
-def salvar_historico(user_id, historico):
+def salvar_historico_chat(user_id, chat_id, historico):
     try:
         if not historico:
             return False
         
-        primeira_msg = historico[0]["texto"][:50]
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        ref = db.reference(f"logs/usuarios/{user_id}/historico/{ts}")
+        primeira_msg = historico[0]["text"][:50]
+        ref = db.reference(f"logs/usuarios/{user_id}/chats/{chat_id}")
         ref.set({
             "titulo": primeira_msg,
             "mensagens": historico,
-            "timestamp": datetime.now().isoformat()
+            "ultima_atualizacao": datetime.now().isoformat()
         })
         return True
     except Exception as e:
         st.error(f"Erro ao salvar histórico: {str(e)}")
         return False
+
+def carregar_historico_chats(user_id):
+    try:
+        ref = db.reference(f"logs/usuarios/{user_id}/chats")
+        chats = ref.get()
+        return chats if chats else {}
+    except Exception as e:
+        st.error(f"Erro ao carregar histórico: {str(e)}")
+        return {}
 
 def criar_usuario(email, senha, nome_usuario):
     try:
@@ -479,16 +522,50 @@ def render_header():
 
 def render_login_sidebar():
     with st.sidebar:
-        if st.button("+ Novo chat", key="new_chat_btn"):
-            st.session_state.messages = [
-                {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
-            ]
-            st.rerun()
-        
         if st.session_state.get("user_type") != "guest":
+            # Novo chat
+            if st.button("+ Novo chat", key="new_chat_btn"):
+                if "current_chat_id" in st.session_state:
+                    # Salva o chat atual antes de criar um novo
+                    salvar_historico_chat(
+                        st.session_state.user_id,
+                        st.session_state.current_chat_id,
+                        st.session_state.messages
+                    )
+                
+                # Cria novo chat
+                new_chat_id = str(uuid.uuid4())
+                st.session_state.current_chat_id = new_chat_id
+                st.session_state.messages = [
+                    {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
+                ]
+                st.rerun()
+            
+            # Exibir histórico de chats
+            st.markdown('<div class="chat-history">', unsafe_allow_html=True)
+            st.markdown('<div class="sidebar-title">Histórico de Chats</div>', unsafe_allow_html=True)
+            
+            chats = carregar_historico_chats(st.session_state.user_id)
+            if chats:
+                for chat_id, chat_data in chats.items():
+                    if st.button(
+                        chat_data.get("titulo", "Chat sem título"),
+                        key=f"chat_{chat_id}",
+                        help=f"Última atualização: {chat_data.get('ultima_atualizacao', '')}"
+                    ):
+                        # Carrega o chat selecionado
+                        st.session_state.current_chat_id = chat_id
+                        st.session_state.messages = chat_data.get("mensagens", [])
+                        st.rerun()
+            else:
+                st.markdown('<div style="color: #999; font-size: 0.9rem;">Nenhum chat anterior</div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
             user_name = st.session_state.get("user_data", {}).get("nome_usuario", "Usuário")
             st.markdown(f'<div class="user-greeting">👋 Olá, {user_name}!</div>', unsafe_allow_html=True)
         
+        # Menu de navegação
         st.markdown(f"""
         <div class="sidebar-content">
             <div class="sidebar-title">Menu</div>
@@ -502,11 +579,15 @@ def render_login_sidebar():
             if st.button("Entrar", key="login_btn"):
                 success, user, message = autenticar_usuario(email, senha)
                 if success:
+                    # Cria um novo chat para o usuário logado
+                    new_chat_id = str(uuid.uuid4())
+                    
                     st.session_state.update({
                         "user_type": "user",
                         "user_id": user["email"],
                         "show_login": False,
                         "user_data": user,
+                        "current_chat_id": new_chat_id,
                         "messages": [
                             {"sender": "bot", "text": f"Olá {user['nome_usuario']}! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
                         ]
@@ -535,6 +616,13 @@ def render_login_sidebar():
         choice = st.radio("Navegação", menu_itens)
         
         if st.session_state.get("user_type") != "guest" and st.button("Logout"):
+            # Salva o chat atual antes de fazer logout
+            if "current_chat_id" in st.session_state:
+                salvar_historico_chat(
+                    st.session_state.user_id,
+                    st.session_state.current_chat_id,
+                    st.session_state.messages
+                )
             st.session_state.clear()
             st.rerun()
 
@@ -576,7 +664,7 @@ def render_feedbacks():
                     st.write(f"**Data:** {feedback.get('timestamp')}")
                     st.write(f"**Pergunta:** {feedback.get('pergunta')}")
                     st.write(f"**Resposta:** {feedback.get('resposta')}")
-                    st.write(f"**Feedback:** {feedback.get('feedback')}")
+                    st.write(f"**Tipo Feedback:** {feedback.get('tipo_feedback')}")
                     st.divider()
     except Exception as e:
         st.error(f"Erro ao carregar feedbacks: {str(e)}")
@@ -602,17 +690,55 @@ def render_chat_interface():
                 {"sender": "bot", "text": f"{saudacao} sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.\n\nEm que posso te ajudar hoje?"}
             ]
         
-        for message in st.session_state.messages:
+        for idx, message in enumerate(st.session_state.messages):
             if message["sender"] == "user":
                 st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
             else:
                 st.markdown(f'<div class="bot-msg">{message["text"]}</div>', unsafe_allow_html=True)
+                
+                # Adicionar botões de feedback apenas para mensagens do bot
+                if idx > 0 and st.session_state.get("user_type") != "guest":
+                    col1, col2 = st.columns([1, 1])
+                    with col1:
+                        if st.button("👍", key=f"like_{idx}"):
+                            ultima_msg_user = next(
+                                (msg["text"] for msg in reversed(st.session_state.messages[:idx]) 
+                                if msg["sender"] == "user"), ""
+                            )
+                            salvar_feedback(
+                                st.session_state.user_id,
+                                ultima_msg_user,
+                                message["text"],
+                                "like",
+                                "positive"
+                            )
+                            st.success("Feedback enviado!")
+                    with col2:
+                        if st.button("👎", key=f"dislike_{idx}"):
+                            ultima_msg_user = next(
+                                (msg["text"] for msg in reversed(st.session_state.messages[:idx]) 
+                                if msg["sender"] == "user"), ""
+                            )
+                            salvar_feedback(
+                                st.session_state.user_id,
+                                ultima_msg_user,
+                                message["text"],
+                                "dislike",
+                                "negative"
+                            )
+                            st.success("Feedback enviado!")
         
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Input de mensagem
     with st.form(key="message_form", clear_on_submit=True):
-        user_input = st.text_area("Digite sua mensagem:", key="user_input", height=100, value="", placeholder="Digite sua mensagem e pressione Enter ou clique em Enviar")
+        user_input = st.text_area(
+            "Digite sua mensagem:", 
+            key="user_input", 
+            height=100, 
+            value="", 
+            placeholder="Digite sua mensagem e pressione Enter ou clique em Enviar"
+        )
         col1, col2 = st.columns([1, 0.2])
         with col1:
             submit_button = st.form_submit_button(label="Enviar")
@@ -648,6 +774,14 @@ def render_chat_interface():
             # Adiciona resposta do bot ao histórico
             st.session_state.messages.append({"sender": "bot", "text": resposta})
             
+            # Salva o chat atual no Firebase
+            if "current_chat_id" in st.session_state and "user_id" in st.session_state:
+                salvar_historico_chat(
+                    st.session_state.user_id,
+                    st.session_state.current_chat_id,
+                    st.session_state.messages
+                )
+            
             # Rerun para atualizar a interface
             st.rerun()
 
@@ -672,7 +806,10 @@ def main():
             "user_id": f"guest-{uuid.uuid4().hex[:6]}",
             "show_login": False,
             "memoria": carregar_memoria(),
-            "historico": []
+            "current_chat_id": str(uuid.uuid4()),
+            "messages": [
+                {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
+            ]
         })
 
     # Renderizar componentes
