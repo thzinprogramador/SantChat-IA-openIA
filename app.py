@@ -480,13 +480,17 @@ def gerar_resposta(memoria, prompt, user_name=None, historico_conversa=None):
             else:
                 contexto_conversa += f"Assistente: {msg['text']}\n"
     
+    nome_ia = user_name if user_name else "usuário"
+
     system_prompt = f"""
     Hoje é {agora}. Você é o SantChat, IA oficial do Santander.
     Responda com clareza e de forma direta.
     Não invente informações sobre datas ou produtos.
+    Se o usuário perguntar qual é o nome dele, diga: "Seu nome é {nome_ia}".
     Mantenha o contexto da conversa atual.
     {contexto_conversa}
     """
+
     msgs = [{"role": "system", "content": system_prompt.strip()}]
     if memoria:
         msgs.append({"role": "system", "content": "\n".join(memoria)})
