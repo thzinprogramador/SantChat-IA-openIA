@@ -11,9 +11,9 @@ from firebase_admin import credentials, db
 # --- Configurações de Cores ---
 COR_PRIMARIA = "#ec0000"  # Vermelho Santander
 COR_SECUNDARIA = "#222222"  # Azul escuro
-COR_TERCIARIA = "#00a5a8"  # Verde água
+COR_TERCIARIA = "#00F238"  # Verde água
 COR_TEXTO = "#333333"
-COR_FUNDO = "#f8f9fa"  # Fundo mais claro
+COR_FUNDO = "#292A2D"  # Fundo corrigido para #292A2D
 COR_BOTAO = "#ec0000"
 COR_BOTAO_HOVER = "#c50000"
 
@@ -42,7 +42,7 @@ def load_css():
             --spacing: 1rem;
             --header-height: 70px;
             --max-width: 1000px;
-            --color-welcome: {COR_TERCIARIA};
+            --color-welcome: #FF0000;  /* Cor do texto "Bem-vindo ao SantChat" */
         }}
         
         body {{
@@ -402,14 +402,26 @@ def processar_comando_dev(comando, user_data):
     
     return None, None
 
-def gerar_resposta(memoria, prompt, user_name=None):
+def gerar_resposta(memoria, prompt, user_name=None, historico_conversa=None):
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
     saudacao = f"Olá {user_name}," if user_name else "Olá,"
+    
+    # Construir contexto da conversa
+    contexto_conversa = ""
+    if historico_conversa and len(historico_conversa) > 1:
+        contexto_conversa = "\nContexto da conversa atual:\n"
+        for msg in historico_conversa[-5:]:  # Pegar as últimas 5 mensagens como contexto
+            if msg["sender"] == "user":
+                contexto_conversa += f"Usuário: {msg['text']}\n"
+            else:
+                contexto_conversa += f"Assistente: {msg['text']}\n"
     
     system_prompt = f"""
     Hoje é {agora}. Você é o SantChat, IA oficial do Santander.
     {saudacao} responda com clareza e de forma personalizada.
     Não invente informações sobre datas ou produtos.
+    Mantenha o contexto da conversa atual.
+    {contexto_conversa}
     """
     msgs = [{"role": "system", "content": system_prompt.strip()}]
     if memoria:
@@ -467,7 +479,11 @@ def render_header():
 
 def render_login_sidebar():
     with st.sidebar:
-        st.markdown('<button class="new-chat-btn">+ Novo chat</button>', unsafe_allow_html=True)
+        if st.button("+ Novo chat", key="new_chat_btn"):
+            st.session_state.messages = [
+                {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
+            ]
+            st.rerun()
         
         if st.session_state.get("user_type") != "guest":
             user_name = st.session_state.get("user_data", {}).get("nome_usuario", "Usuário")
@@ -490,7 +506,10 @@ def render_login_sidebar():
                         "user_type": "user",
                         "user_id": user["email"],
                         "show_login": False,
-                        "user_data": user
+                        "user_data": user,
+                        "messages": [
+                            {"sender": "bot", "text": f"Olá {user['nome_usuario']}! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
+                        ]
                     })
                     st.success(message)
                     st.rerun()
@@ -593,8 +612,14 @@ def render_chat_interface():
 
     # Input de mensagem
     with st.form(key="message_form", clear_on_submit=True):
-        user_input = st.text_area("Digite sua mensagem:", key="user_input", height=100, value="")
-        submit_button = st.form_submit_button(label="Enviar")
+        user_input = st.text_area("Digite sua mensagem:", key="user_input", height=100, value="", placeholder="Digite sua mensagem e pressione Enter ou clique em Enviar")
+        col1, col2 = st.columns([1, 0.2])
+        with col1:
+            submit_button = st.form_submit_button(label="Enviar")
+        with col2:
+            if st.form_submit_button("Limpar"):
+                user_input = ""
+                st.rerun()
         
         if submit_button and user_input:
             # Verificar se é um comando de dev
@@ -616,7 +641,8 @@ def render_chat_interface():
             resposta = gerar_resposta(
                 st.session_state.get("memoria", []), 
                 user_input,
-                user_name
+                user_name,
+                st.session_state.messages  # Passa o histórico da conversa
             )
             
             # Adiciona resposta do bot ao histórico
