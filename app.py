@@ -414,7 +414,7 @@ def carregar_historico_chats(user_id):
 
 def criar_usuario(email, senha, nome_usuario):
     try:
-        user_id = email.replace("@", "_at_").replace(".", "_dot_").lower()
+        user_id = nome_usuario.lower()
         ref = db.reference(f"usuarios/{user_id}")
         
         if ref.get():
@@ -433,7 +433,7 @@ def criar_usuario(email, senha, nome_usuario):
 
 def autenticar_usuario(email, senha):
     try:
-        user_id = email.replace("@", "_at_").replace(".", "_dot_").lower()
+        user_id = nome_usuario.lower()
         ref = db.reference(f"usuarios/{user_id}")
         usuario = ref.get()
         
