@@ -520,6 +520,7 @@ def render_header():
         <div class="logo">
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Santander_Bank_logo.svg/1200px-Santander_Bank_logo.svg.png" alt="Santander Logo">
             <span style="color: {COR_PRIMARIA}">SantChat</span>
+            <h1> Sou uma IA criada para ajudar você em seus atendimentos</h1>
         </div>
     </div>
     """, unsafe_allow_html=True)
