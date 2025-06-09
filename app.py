@@ -679,7 +679,7 @@ def render_chat_interface():
     st.markdown(f"""
     <div class="main-container">
         <h1 class="welcome-title">SantChat</h1>
-        <h2 class=".welcome-subtitle">Sou uma IA criada para ajudar você em seus atendimentos</h2>
+        <h3 class="welcome-subtitle">Sou uma IA criada para ajudar você em seus atendimentos</h3>
     """, unsafe_allow_html=True)
 
     # Container do chat
