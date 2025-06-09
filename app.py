@@ -500,7 +500,7 @@ def gerar_resposta(memoria, prompt, user_name=None, historico_conversa=None):
                 "max_tokens": 50000,
                 "temperature": 0.7
             },
-            timeout=10
+            timeout=15
         )
 
         if resp.status_code != 200:
