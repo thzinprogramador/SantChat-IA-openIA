@@ -579,7 +579,8 @@ def render_login_sidebar():
             <div class="sidebar-title">Menu</div>
         """, unsafe_allow_html=True)
         
-        if st.session_state.get("show_login"):
+        if st.session_state.get("show_login") or st.button("🔐 Fazer login / Registrar", use_container_width=True):
+            st.session_state["show_login"] = True
             st.subheader("Login")
             email = st.text_input("E-mail")
             senha = st.text_input("Senha", type="password")
@@ -740,8 +741,6 @@ def render_chat_interface():
         user_input = st.text_area(
             "Digite sua mensagem:", 
             key="user_input", 
-            height=100, 
-            value="", 
             placeholder="Digite sua mensagem e pressione Enter ou clique em Enviar",
             label_visibility="collapsed"
         )
