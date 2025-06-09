@@ -6,9 +6,10 @@ from datetime import datetime, timedelta
 import openai
 import requests
 import firebase_admin
-from markdown import markdown
 import streamlit.components.v1 as components
 from firebase_admin import credentials, db
+from datetime import datetime, timedelta  
+from markdown import markdown
 
 # --- Configurações de Cores ---
 COR_PRIMARIA = "#ec0000"  # Vermelho Santander
