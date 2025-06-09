@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import openai
 import requests
 import firebase_admin
+from markdown import markdown
+import streamlit.components.v1 as components
 from firebase_admin import credentials, db
 
 # --- Configurações de Cores ---
@@ -24,6 +26,10 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="auto"
 )
+
+raw_text = message.get("text", "")
+formatted_text = markdown(raw_text)
+st.markdown(f'<div class="bot-msg">{formatted_text}</div>', unsafe_allow_html=True)
 
 # --- Estilos CSS ---
 def load_css():
@@ -725,12 +731,11 @@ def render_chat_interface():
             raw_text = message.get("text", "")
             raw_text = raw_text.replace("`**", "**").replace("**`", "**")
 
-            if message["sender"] == "user":
-                st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
-            else:
-                st.markdown('<div class="bot-msg">', unsafe_allow_html=True)
-                st.markdown(raw_text)  # Aqui o Markdown será interpretado corretamente
-                st.markdown('</div>', unsafe_allow_html=True)
+            if message["sender"] == "bot":
+                st.markdown(
+                    f'<div class="bot-msg">{message["text"]}</div>',
+                    unsafe_allow_html=True
+                )
 
 
 
