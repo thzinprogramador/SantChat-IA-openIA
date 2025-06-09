@@ -665,8 +665,8 @@ def render_login_sidebar():
     return choice if "choice" in locals() else "Chat"
 
 def render_memoria_ia():
-    st.subheader("Memória Global da IA")
     st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
+    st.subheader("Memória Global da IA")
     memoria = carregar_memoria()
     
     if st.button("Atualizar Memória"):
@@ -691,8 +691,8 @@ def render_memoria_ia():
             st.error("Erro ao salvar na memória")
 
 def render_feedbacks():
-    st.subheader("Feedbacks dos Usuários")
     st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
+    st.subheader("Feedbacks dos Usuários")
     
     try:
         ref = db.reference("logs/feedbacks")
@@ -712,6 +712,10 @@ def render_feedbacks():
                     st.divider()
     except Exception as e:
         st.error(f"Erro ao carregar feedbacks: {str(e)}")
+
+def compensar_header_fixo():
+    st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
+
 
 def render_chat_interface():
     st.markdown(f"""
