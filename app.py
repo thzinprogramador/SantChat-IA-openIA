@@ -346,19 +346,19 @@ def load_css():
     """, unsafe_allow_html=True)
 
 # --- Firebase Initialization ---
+
 def initialize_firebase():
     if not firebase_admin._apps:
-        raw_key = st.secrets["FIREBASE_KEY"]
-        
-        firebase_key = {
-            k: (v.replace("\n", "\n") if k == "private_key" else v)
-            for k, v in raw_key.items()
-        }
+        raw_key = dict(st.secrets["FIREBASE_KEY"])
 
-        firebase_admin.initialize_app(
-            credentials.Certificate(firebase_key),
-            {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]}
-        )
+        # Corrigir a quebra de linha da chave privada
+        raw_key["private_key"] = raw_key["private_key"].replace("\\n", "\n")
+
+        cred = credentials.Certificate(raw_key)
+        firebase_admin.initialize_app(cred, {
+            "databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]
+        })
+
 
 # --- Funções Auxiliares ---
 def carregar_memoria():
