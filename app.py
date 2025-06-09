@@ -73,7 +73,7 @@ def load_css():
         .logo {{
             font-weight: 800;
             font-size: 1.8rem;
-            color: var(--color-accent);
+            color: {COR_PRIMARIA};
             display: flex;
             align-items: center;
         }}
@@ -181,9 +181,19 @@ def load_css():
         }}
         
         .message-input {{
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            background: {COR_FUNDO};
+            padding: 10px;
+            border-radius: var(--radius);
+            z-index: 100;
         }}
         
         .message-input textarea {{
@@ -285,6 +295,10 @@ def load_css():
                 padding: 6px 15px;
                 font-size: 0.9rem;
             }}
+            
+            .message-input {{
+                width: 90%;
+            }}
         }}
         
         /* Remove o quadrado branco */
@@ -321,6 +335,11 @@ def load_css():
         /* Remove borda branca do chat */
         .stChatMessage {{
             background-color: transparent !important;
+        }}
+        
+        /* Centralizar conteúdo */
+        .st-emotion-cache-1v0mbdj {{
+            margin: 0 auto;
         }}
     </style>
     """, unsafe_allow_html=True)
@@ -447,7 +466,6 @@ def processar_comando_dev(comando, user_data):
 
 def gerar_resposta(memoria, prompt, user_name=None, historico_conversa=None):
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
-    saudacao = f"Olá {user_name}," if user_name else "Olá,"
     
     # Construir contexto da conversa
     contexto_conversa = ""
@@ -461,7 +479,7 @@ def gerar_resposta(memoria, prompt, user_name=None, historico_conversa=None):
     
     system_prompt = f"""
     Hoje é {agora}. Você é o SantChat, IA oficial do Santander.
-    {saudacao} responda com clareza e de forma personalizada.
+    Responda com clareza e de forma direta.
     Não invente informações sobre datas ou produtos.
     Mantenha o contexto da conversa atual.
     {contexto_conversa}
@@ -501,30 +519,20 @@ def gerar_resposta(memoria, prompt, user_name=None, historico_conversa=None):
 
 # --- Componentes da UI ---
 def render_header():
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        st.markdown(f"""
+    st.markdown(f"""
+    <div class="header">
         <div class="logo">
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Santander_Bank_logo.svg/1200px-Santander_Bank_logo.svg.png" alt="Santander Logo">
-            SantChat
+            <span style="color: {COR_PRIMARIA}">SantChat</span>
         </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        if st.session_state.get("user_type") == "guest":
-            if st.button("Entrar", key="header_login_btn"):
-                st.session_state.show_login = True
-                st.rerun()
-        else:
-            if st.button("Sair", key="header_logout_btn"):
-                st.session_state.clear()
-                st.rerun()
+    </div>
+    """, unsafe_allow_html=True)
 
 def render_login_sidebar():
     with st.sidebar:
         if st.session_state.get("user_type") != "guest":
             # Novo chat
-            if st.button("+ Novo chat", key="new_chat_btn"):
+            if st.button("+ Novo chat", key="new_chat_btn", use_container_width=True):
                 if "current_chat_id" in st.session_state:
                     # Salva o chat atual antes de criar um novo
                     salvar_historico_chat(
@@ -551,7 +559,8 @@ def render_login_sidebar():
                     if st.button(
                         chat_data.get("titulo", "Chat sem título"),
                         key=f"chat_{chat_id}",
-                        help=f"Última atualização: {chat_data.get('ultima_atualizacao', '')}"
+                        help=f"Última atualização: {chat_data.get('ultima_atualizacao', '')}",
+                        use_container_width=True
                     ):
                         # Carrega o chat selecionado
                         st.session_state.current_chat_id = chat_id
@@ -562,8 +571,9 @@ def render_login_sidebar():
             
             st.markdown('</div>', unsafe_allow_html=True)
             
-            user_name = st.session_state.get("user_data", {}).get("nome_usuario", "Usuário")
-            st.markdown(f'<div class="user-greeting">👋 Olá, {user_name}!</div>', unsafe_allow_html=True)
+            if st.session_state.get("user_data"):
+                user_name = st.session_state.user_data.get("nome_usuario", "Usuário")
+                st.markdown(f'<div class="user-greeting">👋 Olá, {user_name}!</div>', unsafe_allow_html=True)
         
         # Menu de navegação
         st.markdown(f"""
@@ -576,7 +586,7 @@ def render_login_sidebar():
             email = st.text_input("E-mail")
             senha = st.text_input("Senha", type="password")
             
-            if st.button("Entrar", key="login_btn"):
+            if st.button("Entrar", key="login_btn", use_container_width=True):
                 success, user, message = autenticar_usuario(email, senha)
                 if success:
                     # Cria um novo chat para o usuário logado
@@ -589,7 +599,7 @@ def render_login_sidebar():
                         "user_data": user,
                         "current_chat_id": new_chat_id,
                         "messages": [
-                            {"sender": "bot", "text": f"Olá {user['nome_usuario']}! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
+                            {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
                         ]
                     })
                     st.success(message)
@@ -599,10 +609,10 @@ def render_login_sidebar():
             
             st.divider()
             st.subheader("Criar conta")
-            new_email = st.text_input("Novo e-mail")
-            new_pass = st.text_input("Nova senha", type="password")
-            new_username = st.text_input("Nome de usuário")
-            if st.button("Registrar"):
+            new_email = st.text_input("Novo e-mail", key="new_email")
+            new_pass = st.text_input("Nova senha", type="password", key="new_pass")
+            new_username = st.text_input("Nome de usuário", key="new_username")
+            if st.button("Registrar", key="register_btn", use_container_width=True):
                 success, message = criar_usuario(new_email, new_pass, new_username)
                 if success:
                     st.success(message)
@@ -613,9 +623,9 @@ def render_login_sidebar():
         if st.session_state.get("user_data", {}).get("nivel") == -8:  # Dev
             menu_itens += ["Memória IA", "Feedbacks"]
         
-        choice = st.radio("Navegação", menu_itens)
+        choice = st.radio("Navegação", menu_itens, label_visibility="collapsed")
         
-        if st.session_state.get("user_type") != "guest" and st.button("Logout"):
+        if st.session_state.get("user_type") != "guest" and st.button("Logout", use_container_width=True):
             # Salva o chat atual antes de fazer logout
             if "current_chat_id" in st.session_state:
                 salvar_historico_chat(
@@ -672,8 +682,7 @@ def render_feedbacks():
 def render_chat_interface():
     st.markdown(f"""
     <div class="main-container">
-        <h1 class="welcome-title">Bem-vindo ao SantChat</h1>
-        <p class="welcome-subtitle">Seu chat inteligente.</p>
+        <h1 class="welcome-title">SantChat</h1>
     """, unsafe_allow_html=True)
 
     # Container do chat
@@ -683,11 +692,8 @@ def render_chat_interface():
         
         # Mostrar histórico de mensagens
         if "messages" not in st.session_state:
-            user_name = st.session_state.get("user_data", {}).get("nome_usuario")
-            saudacao = f"Olá {user_name}," if user_name else "Olá,"
-            
             st.session_state.messages = [
-                {"sender": "bot", "text": f"{saudacao} sou o SantChat, IA oficial do Santander. Estou aqui pra ajudar com qualquer dúvida ou solicitação sobre nossos produtos e serviços.\n\nEm que posso te ajudar hoje?"}
+                {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
             ]
         
         for idx, message in enumerate(st.session_state.messages):
@@ -730,20 +736,21 @@ def render_chat_interface():
         
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Input de mensagem
+    # Input de mensagem (fixo na parte inferior)
     with st.form(key="message_form", clear_on_submit=True):
         user_input = st.text_area(
             "Digite sua mensagem:", 
             key="user_input", 
             height=100, 
             value="", 
-            placeholder="Digite sua mensagem e pressione Enter ou clique em Enviar"
+            placeholder="Digite sua mensagem e pressione Enter ou clique em Enviar",
+            label_visibility="collapsed"
         )
         col1, col2 = st.columns([1, 0.2])
         with col1:
-            submit_button = st.form_submit_button(label="Enviar")
+            submit_button = st.form_submit_button(label="Enviar", use_container_width=True)
         with col2:
-            if st.form_submit_button("Limpar"):
+            if st.form_submit_button("Limpar", use_container_width=True):
                 user_input = ""
                 st.rerun()
         
