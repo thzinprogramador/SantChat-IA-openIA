@@ -718,10 +718,10 @@ def render_chat_interface():
                 st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
             else:
                 st.markdown(f"""
-<div class="bot-msg">
-{message["text"]}
-</div>
-""", unsafe_allow_html=True)
+                    <div class="bot-msg">
+                        {message["text"]}
+                    </div>
+                """, unsafe_allow_html=True)
 
                 
                 # Adicionar botões de feedback apenas para mensagens do bot
