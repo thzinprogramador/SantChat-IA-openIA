@@ -7,3 +7,4 @@ streamlit-oauth==0.1.14
 streamlit-auth0-component==0.1.5
 streamlit-auth0
 streamlit_oauth
+Markdown
