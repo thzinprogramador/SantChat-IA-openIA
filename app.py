@@ -348,8 +348,13 @@ def load_css():
 # --- Firebase Initialization ---
 def initialize_firebase():
     if not firebase_admin._apps:
-        firebase_key = {k: (v.replace("\n", "\n") if k == "private_key" else v)
-                        for k, v in st.secrets["FIREBASE_KEY"].items()}
+        raw_key = st.secrets["FIREBASE_KEY"]
+        
+        firebase_key = {
+            k: (v.replace("\n", "\n") if k == "private_key" else v)
+            for k, v in raw_key.items()
+        }
+
         firebase_admin.initialize_app(
             credentials.Certificate(firebase_key),
             {"databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]}
