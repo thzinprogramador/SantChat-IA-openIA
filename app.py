@@ -499,10 +499,10 @@ def gerar_resposta(memoria, prompt, user_name=None, historico_conversa=None):
             json={
                 "model": "deepseek/deepseek-r1-0528:free",
                 "messages": msgs,
-                "max_tokens": 500,
+                "max_tokens": 50000,
                 "temperature": 0.7
             },
-            timeout=15
+            timeout=10
         )
 
         if resp.status_code != 200:
