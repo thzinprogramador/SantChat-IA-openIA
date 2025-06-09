@@ -27,9 +27,6 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-raw_text = message.get("text", "")
-formatted_text = markdown(raw_text)
-st.markdown(f'<div class="bot-msg">{formatted_text}</div>', unsafe_allow_html=True)
 
 # --- Estilos CSS ---
 def load_css():
@@ -728,18 +725,14 @@ def render_chat_interface():
             ]
 
         for idx, message in enumerate(st.session_state.messages):
-            raw_text = message.get("text", "")
-            raw_text = raw_text.replace("`**", "**").replace("**`", "**")
+            if message["sender"] == "user":
+                st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
+            else:
+                raw_text = message.get("text", "")
+                formatted_text = markdown(raw_text)
+                st.markdown(f'<div class="bot-msg">{formatted_text}</div>', unsafe_allow_html=True)
 
-            if message["sender"] == "bot":
-                st.markdown(
-                    f'<div class="bot-msg">{message["text"]}</div>',
-                    unsafe_allow_html=True
-                )
-
-
-
-                
+          
                 # Adicionar botões de feedback apenas para mensagens do bot
                 if idx > 0 and st.session_state.get("user_type") != "guest":
                     col1, col2 = st.columns([1, 1])
