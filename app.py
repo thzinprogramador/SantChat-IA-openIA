@@ -2,7 +2,6 @@ import streamlit as st
 import os
 import json
 import uuid
-from datetime import datetime, timedelta  
 import openai
 import requests
 import firebase_admin
