@@ -391,7 +391,7 @@ def salvar_historico_chat(user_id, chat_id, historico):
         if not historico:
             return False
         
-        primeira_msg = historico[0]["text"][:50]
+        primeira_msg = next((msg["text"] for msg in historico if msg["sender"] == "user"), "Chat sem título")[:50]
         ref = db.reference(f"logs/usuarios/{user_id}/chats/{chat_id}")
         ref.set({
             "titulo": primeira_msg,
@@ -453,7 +453,7 @@ def autenticar_usuario(email, senha):
 
 
 def processar_comando_dev(comando, user_data):
-    if user_data.get("nivel", 0) != -8:  # Nível de dev
+    if int(user_data.get("nivel", 0)) != -8:  # Nível de dev
         return None, "Acesso negado"
     
     if comando.startswith("/sntevksi "):
@@ -652,7 +652,13 @@ def render_memoria_ia():
         memoria = carregar_memoria()
         st.rerun()
     
-    st.text_area("Conteúdo da Memória", value="\n".join(memoria), height=300)
+    if memoria:
+    for idx, item in enumerate(memoria):
+        st.markdown(f"**{idx + 1}.** {item}")
+        st.divider()
+    else:
+        st.info("Nenhuma informação na memória ainda.")
+
     
     st.subheader("Adicionar à Memória")
     nova_info = st.text_area("Nova informação para a memória")
