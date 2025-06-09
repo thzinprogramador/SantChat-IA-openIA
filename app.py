@@ -434,7 +434,7 @@ def criar_usuario(email, senha, nome_usuario):
 def autenticar_usuario(email, senha):
     try:
         user_id = usuario.get("nome_usuario", "").lower()
-        ref = db.reference(f"usuarios/{email.split('@')[0].lower()}")  # <-- substituir essa linha!
+        ref = db.reference(f"usuarios/{user_id}")
         usuario = ref.get()
         
         if not usuario:
