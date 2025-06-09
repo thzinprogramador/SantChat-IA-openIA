@@ -653,9 +653,9 @@ def render_memoria_ia():
         st.rerun()
     
     if memoria:
-    for idx, item in enumerate(memoria):
-        st.markdown(f"**{idx + 1}.** {item}")
-        st.divider()
+        for idx, item in enumerate(memoria):
+            st.markdown(f"**{idx + 1}.** {item}")
+            st.divider()
     else:
         st.info("Nenhuma informação na memória ainda.")
 
