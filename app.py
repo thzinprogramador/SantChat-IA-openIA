@@ -480,16 +480,24 @@ def gerar_resposta(memoria, prompt, user_name=None, historico_conversa=None):
             else:
                 contexto_conversa += f"Assistente: {msg['text']}\n"
     
-    nome_ia = user_name if user_name else "usuário"
+    nome_usuario = user_name or "usuário"
 
     system_prompt = f"""
     Hoje é {agora}. Você é o SantChat, IA oficial do Santander.
+
     Responda com clareza e de forma direta.
-    Não invente informações sobre datas ou produtos.
-    Se o usuário perguntar qual é o nome dele, diga: "Seu nome é {nome_ia}".
     Mantenha o contexto da conversa atual.
-    {contexto_conversa}
+    Não invente informações sobre datas ou produtos.
+    Se o usuário perguntar qual é o nome dele, diga: "Seu nome é {nome_usuario}".
+
+    ⚠️ Importante: Quando quiser mostrar algo em **negrito**, use diretamente `**texto**`, sem colocar entre crases ou aspas.
+    Evite usar o símbolo de crase (`) ao redor de exemplos de Markdown.
+    Exemplo correto: Para negrito, use **assim**.
+    Exemplo errado: Para negrito, use `**assim**`.
+
+    Nunca explique Markdown como código, apenas mostre já formatado.
     """
+
 
     msgs = [{"role": "system", "content": system_prompt.strip()}]
     if memoria:
@@ -717,11 +725,14 @@ def render_chat_interface():
             if message["sender"] == "user":
                 st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
             else:
+                raw_text = message.get("text", "")
+                raw_text = raw_text.replace("`**", "**").replace("**`", "**")
                 st.markdown(f"""
-                    <div class="bot-msg">
-                        {message["text"]}
-                    </div>
-                """, unsafe_allow_html=True)
+            <div class="bot-msg">
+            {raw_text}
+            </div>
+            """, unsafe_allow_html=True)
+
 
                 
                 # Adicionar botões de feedback apenas para mensagens do bot
