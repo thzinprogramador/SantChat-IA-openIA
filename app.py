@@ -109,9 +109,11 @@ def load_css():
         }}
         
         .welcome-title {{
-            color: var(--color-welcome);
-            font-size: 2.2rem;
-            margin-bottom: 10px;
+            font-size: 24px;
+            color: #1976D2;
+            text-decoration: none !important;
+            pointer-events: none;
+            cursor: default;
         }}
         
         .welcome-subtitle {{
