@@ -433,8 +433,8 @@ def criar_usuario(email, senha, nome_usuario):
 
 def autenticar_usuario(email, senha):
     try:
-        user_id = nome_usuario.lower()
-        ref = db.reference(f"usuarios/{user_id}")
+        user_id = usuario.get("nome_usuario", "").lower()
+        ref = db.reference(f"usuarios/{email.split('@')[0].lower()}")  # <-- substituir essa linha!
         usuario = ref.get()
         
         if not usuario:
@@ -579,8 +579,10 @@ def render_login_sidebar():
             <div class="sidebar-title">Menu</div>
         """, unsafe_allow_html=True)
         
-        if st.session_state.get("show_login") or st.button("🔐 Fazer login / Registrar", use_container_width=True):
-            st.session_state["show_login"] = True
+        if st.session_state.get("user_type") == "guest":
+            if st.session_state.get("show_login") or st.button("🔐 Fazer login / Registrar", use_container_width=True):
+                st.session_state["show_login"] = True
+
             st.subheader("Login")
             email = st.text_input("E-mail")
             senha = st.text_input("Senha", type="password")
@@ -593,7 +595,7 @@ def render_login_sidebar():
                     
                     st.session_state.update({
                         "user_type": "user",
-                        "user_id": user["email"],
+                        "user_id": user["nome_usuario"].lower(),
                         "show_login": False,
                         "user_data": user,
                         "current_chat_id": new_chat_id,
@@ -619,7 +621,7 @@ def render_login_sidebar():
                     st.error(message)
         
         menu_itens = ["Chat"]
-        if st.session_state.get("user_data", {}).get("nivel") == -8:  # Dev
+        if int(st.session_state.get("user_data", {}).get("nivel", 0)) == -8:  # Dev
             menu_itens += ["Memória IA", "Feedbacks"]
         
         choice = st.radio("Navegação", menu_itens, label_visibility="collapsed")
