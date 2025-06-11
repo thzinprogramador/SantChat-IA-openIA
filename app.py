@@ -605,33 +605,33 @@ def render_login_sidebar():
         """, unsafe_allow_html=True)
         
         if st.session_state.get("user_type") == "guest":
-    if "mostrar_registro" not in st.session_state:
-        st.session_state.mostrar_registro = False
+            if "mostrar_registro" not in st.session_state:
+                st.session_state.mostrar_registro = False
 
-        #criar login
-    if st.session_state.get("show_login") or st.button("🔐 Fazer login / Registrar", use_container_width=True):
-        st.session_state["show_login"] = True
+            #criar login
+            if st.session_state.get("show_login") or st.button("🔐 Fazer login / Registrar", use_container_width=True):
+                st.session_state["show_login"] = True
 
-    if not st.session_state.mostrar_registro:
-        st.subheader("Login")
-        email = st.text_input("E-mail")
-        senha = st.text_input("Senha", type="password")
+            if not st.session_state.mostrar_registro:
+                st.subheader("Login")
+                email = st.text_input("E-mail")
+                senha = st.text_input("Senha", type="password")
         
-        if st.button("Entrar", key="login_btn", use_container_width=True):
-            success, user, message = autenticar_usuario(email, senha)
+                if st.button("Entrar", key="login_btn", use_container_width=True):
+                    success, user, message = autenticar_usuario(email, senha)
 
-        if st.button("Não tem conta? Criar uma", key="abrir_registro", use_container_width=True):
-            st.session_state.mostrar_registro = True
+                if st.button("Não tem conta? Criar uma", key="abrir_registro", use_container_width=True):
+                    st.session_state.mostrar_registro = True
 
-    else:
-        st.subheader("Criar conta")
-        novo_email = st.text_input("Novo e-mail")
-        nova_senha = st.text_input("Nova senha", type="password")
-        if st.button("Registrar", key="registro_btn", use_container_width=True):
-            # Seu código de registro aqui
-            registrar_usuario(novo_email, nova_senha)
-            st.success("Conta criada com sucesso!")
-            st.session_state.mostrar_registro = False
+            else:
+                st.subheader("Criar conta")
+                novo_email = st.text_input("Novo e-mail")
+                nova_senha = st.text_input("Nova senha", type="password")
+                if st.button("Registrar", key="registro_btn", use_container_width=True):
+                    # Seu código de registro aqui
+                    registrar_usuario(novo_email, nova_senha)
+                    st.success("Conta criada com sucesso!")
+                    st.session_state.mostrar_registro = False
 
                 if success:
                     # Cria um novo chat para o usuário logado
