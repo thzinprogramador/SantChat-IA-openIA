@@ -553,9 +553,23 @@ def render_header():
 
 def render_login_sidebar():
     with st.sidebar:
+        if "mostrar_registro" not in st.session_state:
+            st.session_state.mostrar_registro = False
+        if "show_login" not in st.session_state:
+            st.session_state.show_login = False
+        if "show_register_form" not in st.session_state:
+            st.session_state.show_register_form = False  # previne o erro
+
         st.title("SantChat")
 
-        if st.session_state.get("user_type") == "guest":
+        if st.session_state.get("user_type") != "guest":
+            st.write(f"👋 Olá, {st.session_state.get('user_id', 'usuário')}!")
+        if st.button("Logout", use_container_width=True):
+            st.session_state.clear()
+            st.session_state["user_type"] = "guest"
+            st.session_state["show_login"] = False
+            st.rerun()    
+            
             if "mostrar_registro" not in st.session_state:
                 st.session_state.mostrar_registro = False
             if "show_login" not in st.session_state:
@@ -631,7 +645,7 @@ def render_login_sidebar():
 
         # Usuário autenticado (logado)
         else:
-            st.write(f"✅ Logado como: {st.session_state.get('user_email', 'Usuário')}")
+            # desativado - st.write(f"✅ Logado como: {st.session_state.get('user_email', 'Usuário')}")
 
             # Botão para criar novo chat
             if st.button("+ Novo chat", key="new_chat_btn", use_container_width=True):
@@ -650,13 +664,13 @@ def render_login_sidebar():
                 st.rerun()
 
             # Botão de logout
-            if st.button("🚪 Sair", use_container_width=True):
-                st.session_state.user_type = "guest"
-                st.session_state.user_email = ""
-                st.session_state.user_id = ""
-                st.session_state.show_login_form = False
-                st.session_state.show_register_form = False
-                st.rerun()
+            #if st.button("🚪 Sair", use_container_width=True):
+                #st.session_state.user_type = "guest"
+                #st.session_state.user_email = ""
+                #st.session_state.user_id = ""
+                #st.session_state.show_login_form = False
+                #st.session_state.show_register_form = False
+                #st.rerun()
 
             
             # Exibir histórico de chats
