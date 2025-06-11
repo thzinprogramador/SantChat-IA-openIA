@@ -567,7 +567,7 @@ def render_login_sidebar():
 
         # Usuário não autenticado (visitante)
         if st.session_state.user_type == "guest":
-            if st.button("🔐 Fazer login", use_container_width=True):
+            if st.button("🔐 Fazer login", use_container_width=True, key="abrir_login_btn"):
                 st.session_state.show_login_form = True
                 st.session_state.show_register_form = False
 
