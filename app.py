@@ -553,40 +553,61 @@ def render_header():
 
 def render_login_sidebar():
     with st.sidebar:
-        st.markdown("### Menu")
+        st.title("SantChat")
 
-        # Inicializa estados da interface, se não existirem
-        if "user_type" not in st.session_state:
-            st.session_state.user_type = "guest"
+        if st.session_state.get("user_type") == "guest":
+            if "mostrar_registro" not in st.session_state:
+                st.session_state.mostrar_registro = False
+            if "show_login" not in st.session_state:
+                st.session_state.show_login = False
 
-        if "show_login_form" not in st.session_state:
-            st.session_state.show_login_form = False
+            if not st.session_state.mostrar_registro:
+                if st.button("🔐 Fazer login", use_container_width=True):
+                    st.session_state.show_login = True
 
-        if "show_register_form" not in st.session_state:
-            st.session_state.show_register_form = False
+                if st.session_state.show_login:
+                    st.subheader("Login")
+                    email = st.text_input("E-mail")
+                    senha = st.text_input("Senha", type="password")
 
-        # Usuário não autenticado (visitante)
-        if st.session_state.user_type == "guest":
-            if st.button("🔐 Fazer login", use_container_width=True, key="abrir_login_btn"):
-                st.session_state.show_login_form = True
-                st.session_state.show_register_form = False
+                    if st.button("Entrar", use_container_width=True):
+                        success, user, message = autenticar_usuario(email, senha)
+                        if success:
+                            new_chat_id = str(uuid.uuid4())
+                            st.session_state.update({
+                                "user_type": "user",
+                                "user_id": user["nome_usuario"].lower(),
+                                "show_login": False,
+                                "user_data": user,
+                                "current_chat_id": new_chat_id,
+                                "messages": [
+                                    {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
+                                ]
+                            })
+                            st.success(message)
+                            st.rerun()
+                        else:
+                            st.error(message)
 
-            # Formulário de login
-            if st.session_state.show_login_form:
-                st.subheader("Login")
-                email = st.text_input("E-mail", key="login_email")
-                senha = st.text_input("Senha", type="password", key="login_senha")
+                    if st.button("Não tem conta? Criar uma", use_container_width=True):
+                        st.session_state.mostrar_registro = True
+                        st.session_state.show_login = False
 
-                if st.button("Entrar", key="login_btn", use_container_width=True):
-                    success, user, message = autenticar_usuario(email, senha)
+            else:
+                st.subheader("Criar conta")
+                new_email = st.text_input("Novo e-mail")
+                new_pass = st.text_input("Nova senha", type="password")
+                new_username = st.text_input("Nome de usuário")
+
+                if st.button("Registrar", use_container_width=True):
+                    success, message = criar_usuario(new_email, new_pass, new_username)
                     if success:
-                        st.session_state.user_type = user["tipo"]
-                        st.session_state.user_email = user["email"]
-                        st.session_state.user_id = user["id"]
-                        st.session_state.show_login_form = False
-                        st.rerun()
+                        st.success(message)
+                        st.session_state.mostrar_registro = False
+                        st.session_state.show_login = True
                     else:
                         st.error(message)
+
 
                 if st.button("Não tem conta? Criar uma", key="show_register_btn", use_container_width=True):
                     st.session_state.show_login_form = False
@@ -896,6 +917,14 @@ def main():
         render_memoria_ia()
     elif choice == "Feedbacks" and st.session_state.get("user_data", {}).get("nivel") == -8:
         render_feedbacks()
+
+        aplicar_estilo_customizado()
+        render_login_sidebar()
+
+        # Mostra aviso se for visitante
+        if st.session_state.get("user_type") == "guest":
+            st.info("👤 Você está como visitante — suas conversas não serão salvas.", icon="⚠️")
+
 
 if __name__ == "__main__":
     main()
