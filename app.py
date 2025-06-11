@@ -553,24 +553,90 @@ def render_header():
 
 def render_login_sidebar():
     with st.sidebar:
-        if st.session_state.get("user_type") != "guest":
-            # Novo chat
+        st.markdown("### Menu")
+
+        # Inicializa estados da interface, se não existirem
+        if "user_type" not in st.session_state:
+            st.session_state.user_type = "guest"
+
+        if "show_login_form" not in st.session_state:
+            st.session_state.show_login_form = False
+
+        if "show_register_form" not in st.session_state:
+            st.session_state.show_register_form = False
+
+        # Usuário não autenticado (visitante)
+        if st.session_state.user_type == "guest":
+            if st.button("🔐 Fazer login", use_container_width=True):
+                st.session_state.show_login_form = True
+                st.session_state.show_register_form = False
+
+            # Formulário de login
+            if st.session_state.show_login_form:
+                st.subheader("Login")
+                email = st.text_input("E-mail", key="login_email")
+                senha = st.text_input("Senha", type="password", key="login_senha")
+
+                if st.button("Entrar", key="login_btn", use_container_width=True):
+                    success, user, message = autenticar_usuario(email, senha)
+                    if success:
+                        st.session_state.user_type = user["tipo"]
+                        st.session_state.user_email = user["email"]
+                        st.session_state.user_id = user["id"]
+                        st.session_state.show_login_form = False
+                        st.rerun()
+                    else:
+                        st.error(message)
+
+                if st.button("Não tem conta? Criar uma", key="show_register_btn", use_container_width=True):
+                    st.session_state.show_login_form = False
+                    st.session_state.show_register_form = True
+
+            # Formulário de criação de conta
+            if st.session_state.show_register_form:
+                st.subheader("Criar conta")
+                novo_email = st.text_input("Novo e-mail", key="novo_email")
+                nova_senha = st.text_input("Nova senha", type="password", key="nova_senha")
+                nome_usuario = st.text_input("Nome de usuário", key="nome_usuario")
+
+                if st.button("Registrar", key="registro_btn", use_container_width=True):
+                    try:
+                        registrar_usuario(novo_email, nova_senha, nome_usuario)
+                        st.success("Conta criada com sucesso! Agora você pode fazer login.")
+                        st.session_state.show_register_form = False
+                        st.session_state.show_login_form = True
+                    except Exception as e:
+                        st.error(f"Erro ao registrar: {e}")
+
+        # Usuário autenticado (logado)
+        else:
+            st.write(f"✅ Logado como: {st.session_state.get('user_email', 'Usuário')}")
+
+            # Botão para criar novo chat
             if st.button("+ Novo chat", key="new_chat_btn", use_container_width=True):
                 if "current_chat_id" in st.session_state:
-                    # Salva o chat atual antes de criar um novo
                     salvar_historico_chat(
                         st.session_state.user_id,
                         st.session_state.current_chat_id,
                         st.session_state.messages
                     )
-                
-                # Cria novo chat
+
                 new_chat_id = str(uuid.uuid4())
                 st.session_state.current_chat_id = new_chat_id
                 st.session_state.messages = [
                     {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
                 ]
                 st.rerun()
+
+            # Botão de logout
+            if st.button("🚪 Sair", use_container_width=True):
+                st.session_state.user_type = "guest"
+                st.session_state.user_email = ""
+                st.session_state.user_id = ""
+                st.session_state.show_login_form = False
+                st.session_state.show_register_form = False
+                st.rerun()
+
             
             # Exibir histórico de chats
             st.markdown('<div class="chat-history">', unsafe_allow_html=True)
@@ -609,7 +675,7 @@ def render_login_sidebar():
                 st.session_state.mostrar_registro = False
 
             #criar login
-            if st.session_state.get("show_login") or st.button("🔐 Fazer login / Registrar", use_container_width=True):
+            if st.session_state.get("show_login") or st.button("🔐 Fazer login", use_container_width=True):
                 st.session_state["show_login"] = True
 
             if not st.session_state.mostrar_registro:
