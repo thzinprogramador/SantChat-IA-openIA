@@ -670,65 +670,6 @@ def render_login_sidebar():
             <div class="sidebar-title">Menu</div>
         """, unsafe_allow_html=True)
         
-        if st.session_state.get("user_type") == "guest":
-            if "mostrar_registro" not in st.session_state:
-                st.session_state.mostrar_registro = False
-
-            #criar login
-            if st.session_state.get("show_login") or st.button("🔐 Fazer login", use_container_width=True):
-                st.session_state["show_login"] = True
-
-            if not st.session_state.mostrar_registro:
-                st.subheader("Login")
-                email = st.text_input("E-mail")
-                senha = st.text_input("Senha", type="password")
-        
-                if st.button("Entrar", key="login_btn", use_container_width=True):
-                    success, user, message = autenticar_usuario(email, senha)
-
-                if st.button("Não tem conta? Criar uma", key="abrir_registro", use_container_width=True):
-                    st.session_state.mostrar_registro = True
-
-            else:
-                st.subheader("Criar conta")
-                novo_email = st.text_input("Novo e-mail")
-                nova_senha = st.text_input("Nova senha", type="password")
-                if st.button("Registrar", key="registro_btn", use_container_width=True):
-                    # Seu código de registro aqui
-                    registrar_usuario(novo_email, nova_senha)
-                    st.success("Conta criada com sucesso!")
-                    st.session_state.mostrar_registro = False
-
-                if success:
-                    # Cria um novo chat para o usuário logado
-                    new_chat_id = str(uuid.uuid4())
-                    
-                    st.session_state.update({
-                        "user_type": "user",
-                        "user_id": user["nome_usuario"].lower(),
-                        "show_login": False,
-                        "user_data": user,
-                        "current_chat_id": new_chat_id,
-                        "messages": [
-                            {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
-                        ]
-                    })
-                    st.success(message)
-                    st.rerun()
-                else:
-                    st.error(message)
-            
-            st.divider()
-            st.subheader("Criar conta")
-            new_email = st.text_input("Novo e-mail", key="new_email")
-            new_pass = st.text_input("Nova senha", type="password", key="new_pass")
-            new_username = st.text_input("Nome de usuário", key="new_username")
-            if st.button("Registrar", key="register_btn", use_container_width=True):
-                success, message = criar_usuario(new_email, new_pass, new_username)
-                if success:
-                    st.success(message)
-                else:
-                    st.error(message)
         
         menu_itens = ["Chat"]
         if int(st.session_state.get("user_data", {}).get("nivel", 0)) == -8:  # Dev
