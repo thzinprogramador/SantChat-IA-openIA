@@ -562,13 +562,11 @@ def render_login_sidebar():
 
         st.title("SantChat")
 
-        if st.session_state.get("user_type") != "guest":
-            st.write(f"👋 Olá, {st.session_state.get('user_id', 'usuário')}!")
-        if st.button("Logout", use_container_width=True):
-            st.session_state.clear()
-            st.session_state["user_type"] = "guest"
-            st.session_state["show_login"] = False
-            st.rerun()    
+        if st.session_state.get("user_type") == "guest":
+            if "mostrar_registro" not in st.session_state:
+                st.session_state.mostrar_registro = False
+            if "show_login" not in st.session_state:
+                st.session_state.show_login = False    
             
             if "mostrar_registro" not in st.session_state:
                 st.session_state.mostrar_registro = False
