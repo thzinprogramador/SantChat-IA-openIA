@@ -359,16 +359,6 @@ def initialize_firebase():
             "databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]
         })
 
-def aplicar_estilo_customizado():
-    st.markdown("""
-        <style>
-            /* Adicione seus estilos aqui */
-            .sidebar .sidebar-content {
-                background-color: #1c1c1e;
-                color: white;
-            }
-        </style>
-    """, unsafe_allow_html=True)
 
 # --- Funções Auxiliares ---
 def carregar_memoria():
@@ -566,13 +556,12 @@ def render_login_sidebar():
         # Inicializa o modo de autenticação se ainda não estiver definido
         if "auth_mode" not in st.session_state:
             st.session_state.auth_mode = "login"
-            
         if "mostrar_registro" not in st.session_state:
             st.session_state.mostrar_registro = False
         if "show_login" not in st.session_state:
             st.session_state.show_login = False
         if "show_register_form" not in st.session_state:
-            st.session_state.show_register_form = False  # previne o erro
+            st.session_state.show_register_form = False
 
         st.title("SantChat")
 
@@ -590,7 +579,10 @@ def render_login_sidebar():
                             "user_id": user["nome_usuario"].lower(),
                             "user_data": user,
                             "auth_mode": "login",
-                            "messages": [{"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Estou agora com você para o que precisar, me conta como posso te apoiar hoje?"}],
+                            "messages": [{
+                                "sender": "bot",
+                                "text": "Olá! Sou o SantChat, IA oficial do Santander. Estou agora com você para o que precisar, me conta como posso te apoiar hoje?"
+                            }],
                             "current_chat_id": str(uuid.uuid4())
                         })
                         st.success(message)
@@ -598,7 +590,6 @@ def render_login_sidebar():
                     else:
                         st.error(message)
 
-                # Este botão deve estar sempre aqui no modo login
                 if st.button("Não tem conta? Criar uma", key="show_register_btn", use_container_width=True):
                     st.session_state.auth_mode = "register"
                     st.rerun()
@@ -622,30 +613,12 @@ def render_login_sidebar():
                     st.session_state.auth_mode = "login"
                     st.rerun()
 
-
-            # Formulário de criação de conta
-            if st.session_state.show_register_form:
-                st.subheader("Criar conta")
-                novo_email = st.text_input("Novo e-mail", key="novo_email")
-                nova_senha = st.text_input("Nova senha", type="password", key="nova_senha")
-                nome_usuario = st.text_input("Nome de usuário", key="nome_usuario")
-
-                if st.button("Registrar", key="registro_btn", use_container_width=True):
-                    try:
-                        registrar_usuario(novo_email, nova_senha, nome_usuario)
-                        st.success("Conta criada com sucesso! Agora você pode fazer login.")
-                        st.session_state.show_register_form = False
-                        st.session_state.show_login_form = True
-                    except Exception as e:
-                        st.error(f"Erro ao registrar: {e}")
-
-        # Usuário autenticado (logado)
         else:
-            # desativado - st.write(f"✅ Logado como: {st.session_state.get('user_email', 'Usuário')}")
-
-            # Botão para criar novo chat
             if st.button("+ Novo chat", key="new_chat_btn", use_container_width=True):
-                if "current_chat_id" in st.session_state:
+                if (
+                    "current_chat_id" in st.session_state
+                    and any(msg["sender"] == "user" for msg in st.session_state.get("messages", []))
+                ):
                     salvar_historico_chat(
                         st.session_state.user_id,
                         st.session_state.current_chat_id,
@@ -654,62 +627,55 @@ def render_login_sidebar():
 
                 new_chat_id = str(uuid.uuid4())
                 st.session_state.current_chat_id = new_chat_id
-                st.session_state.messages = [
-                    {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Estou agora com você para o que precisar, me conta como posso te apoiar hoje?"}
-                ]
+                st.session_state.messages = [{
+                    "sender": "bot",
+                    "text": "Olá! Sou o SantChat, IA oficial do Santander. Estou agora com você para o que precisar, me conta como posso te apoiar hoje?"
+                }]
                 st.rerun()
 
-            # Botão de logout
-            #if st.button("🚪 Sair", use_container_width=True):
-                #st.session_state.user_type = "guest"
-                #st.session_state.user_email = ""
-                #st.session_state.user_id = ""
-                #st.session_state.show_login_form = False
-                #st.session_state.show_register_form = False
-                #st.rerun()
-
-            
-            # Exibir histórico de chats
             st.markdown('<div class="chat-history">', unsafe_allow_html=True)
             st.markdown('<div class="sidebar-title">Histórico de Chats</div>', unsafe_allow_html=True)
-            
+
             chats = carregar_historico_chats(st.session_state.user_id)
             if chats:
-                for chat_id, chat_data in chats.items():
+                # Ordenar os chats por data (mais recentes primeiro)
+                chats_ordenados = sorted(
+                    chats.items(),
+                    key=lambda item: item[1].get("ultima_atualizacao", ""),
+                    reverse=True
+                )
+
+                for chat_id, chat_data in chats_ordenados:
                     if st.button(
                         chat_data.get("titulo", "Chat sem título"),
                         key=f"chat_{chat_id}",
                         help=f"Última atualização: {chat_data.get('ultima_atualizacao', '')}",
                         use_container_width=True
                     ):
-                        # Carrega o chat selecionado
                         st.session_state.current_chat_id = chat_id
                         st.session_state.messages = chat_data.get("mensagens", [])
                         st.rerun()
             else:
                 st.markdown('<div style="color: #999; font-size: 0.9rem;">Nenhum chat anterior</div>', unsafe_allow_html=True)
-            
+
             st.markdown('</div>', unsafe_allow_html=True)
-            
+
             if st.session_state.get("user_data"):
                 user_name = st.session_state.user_data.get("nome_usuario", "Usuário")
                 st.markdown(f'<div class="user-greeting">👋 Olá, {user_name}!</div>', unsafe_allow_html=True)
-        
-        # Menu de navegação
-        st.markdown(f"""
+
+        st.markdown("""
         <div class="sidebar-content">
             <div class="sidebar-title">Menu</div>
         """, unsafe_allow_html=True)
-        
-        
+
         menu_itens = ["Chat"]
-        if int(st.session_state.get("user_data", {}).get("nivel", 0)) == -8:  # Dev
+        if int(st.session_state.get("user_data", {}).get("nivel", 0)) == -8:
             menu_itens += ["Memória IA", "Feedbacks"]
-        
+
         choice = st.radio("Navegação", menu_itens, label_visibility="collapsed")
-        
+
         if st.session_state.get("user_type") != "guest" and st.button("Logout", use_container_width=True):
-            # Salva o chat atual antes de fazer logout
             if "current_chat_id" in st.session_state:
                 salvar_historico_chat(
                     st.session_state.user_id,
@@ -720,6 +686,7 @@ def render_login_sidebar():
             st.rerun()
 
     return choice if "choice" in locals() else "Chat"
+
 
 def render_memoria_ia():
     st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
@@ -785,13 +752,17 @@ def render_chat_interface():
     chat_container = st.container()
     with chat_container:
         st.markdown('<div class="chat-container" id="chat-messages">', unsafe_allow_html=True)
-        
-        # Mostrar histórico de mensagens
+
+        # Mostrar histórico de mensagens (primeira vez)
         if "messages" not in st.session_state:
             st.session_state.messages = [
-                {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Estou agora com você para o que precisar, me conta como posso te apoiar hoje?"}
+                {
+                    "sender": "bot",
+                    "text": "Olá! Sou o SantChat, IA oficial do Santander. Estou agora com você para o que precisar, me conta como posso te apoiar hoje?"
+                }
             ]
 
+        # Exibir todas as mensagens
         for idx, message in enumerate(st.session_state.messages):
             if message["sender"] == "user":
                 st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
@@ -800,15 +771,14 @@ def render_chat_interface():
                 formatted_text = markdown(raw_text)
                 st.markdown(f'<div class="bot-msg">{formatted_text}</div>', unsafe_allow_html=True)
 
-          
-                # Adicionar botões de feedback apenas para mensagens do bot
+                # Botões de feedback
                 if idx > 0 and st.session_state.get("user_type") != "guest":
                     col1, col2 = st.columns([1, 1])
                     with col1:
                         if st.button("👍", key=f"like_{idx}"):
                             ultima_msg_user = next(
-                                (msg["text"] for msg in reversed(st.session_state.messages[:idx]) 
-                                if msg["sender"] == "user"), ""
+                                (msg["text"] for msg in reversed(st.session_state.messages[:idx])
+                                 if msg["sender"] == "user"), ""
                             )
                             salvar_feedback(
                                 st.session_state.user_id,
@@ -821,8 +791,8 @@ def render_chat_interface():
                     with col2:
                         if st.button("👎", key=f"dislike_{idx}"):
                             ultima_msg_user = next(
-                                (msg["text"] for msg in reversed(st.session_state.messages[:idx]) 
-                                if msg["sender"] == "user"), ""
+                                (msg["text"] for msg in reversed(st.session_state.messages[:idx])
+                                 if msg["sender"] == "user"), ""
                             )
                             salvar_feedback(
                                 st.session_state.user_id,
@@ -832,15 +802,77 @@ def render_chat_interface():
                                 "negative"
                             )
                             st.success("Feedback enviado!")
-        
+
         st.markdown('</div>', unsafe_allow_html=True)
+
+    # Input do usuário
+    with st.form(key="message_form", clear_on_submit=True):
+        user_input = st.text_area(
+            "Digite sua mensagem:",
+            key="user_input",
+            placeholder="Digite sua mensagem...",
+            label_visibility="collapsed"
+        )
+        col1, col2 = st.columns([1, 0.2])
+        with col1:
+            submit_button = st.form_submit_button(label="Enviar", use_container_width=True)
+        with col2:
+            if st.form_submit_button("Limpar", use_container_width=True):
+                user_input = ""
+                st.rerun()
+
+        # Quando o usuário envia uma mensagem
+        if submit_button and user_input:
+            user_data = st.session_state.get("user_data", {})
+
+            # Verifica comando de dev
+            success, msg = processar_comando_dev(user_input, user_data)
+            if success is not None:
+                if success:
+                    st.success(msg)
+                else:
+                    st.error(msg)
+                st.rerun()
+
+            # Cria novo chat ID somente após envio de mensagem
+            if "current_chat_id" not in st.session_state:
+                new_chat_id = str(uuid.uuid4())
+                st.session_state.current_chat_id = new_chat_id
+
+            # Adiciona mensagem do usuário
+            st.session_state.messages.append({"sender": "user", "text": user_input})
+
+            # Gera resposta da IA
+            user_name = user_data.get("nome_usuario")
+            resposta = gerar_resposta(
+                st.session_state.get("memoria", []),
+                user_input,
+                user_name,
+                st.session_state.messages
+            )
+
+            # Adiciona resposta do bot
+            st.session_state.messages.append({"sender": "bot", "text": resposta})
+
+            # Salva o chat após envio
+            if "current_chat_id" in st.session_state and "user_id" in st.session_state:
+                salvar_historico_chat(
+                    st.session_state.user_id,
+                    st.session_state.current_chat_id,
+                    st.session_state.messages
+                )
+
+            st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
     # Input de mensagem (fixo na parte inferior)
     with st.form(key="message_form", clear_on_submit=True):
         user_input = st.text_area(
             "Digite sua mensagem:", 
             key="user_input", 
-            placeholder="Digite sua mensagem e pressione Enter ou clique em Enviar",
+            placeholder="Digite sua mensagem...",
             label_visibility="collapsed"
         )
         col1, col2 = st.columns([1, 0.2])
@@ -891,11 +923,38 @@ def render_chat_interface():
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+# --- Função para aplicar estilo dinâmico ---
+def aplicar_estilo_customizado():
+    modo_tema = st.get_option("theme.base")
+
+    if modo_tema == "dark":
+        # Estilo para modo escuro
+        st.markdown("""
+            <style>
+                .elemento-seletor {
+                    color: white;
+                    background-color: #1e1e1e;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+    else:
+        # Estilo para modo claro
+        st.markdown("""
+            <style>
+                .elemento-seletor {
+                    color: black;
+                    background-color: #ffffff;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+
 # --- Função Principal ---
 def main():
     # Carregar configurações
     load_css()
     initialize_firebase()
+    aplicar_estilo_customizado()
+
     
     # Configurar chave da API
     global OPENROUTER_KEY
@@ -932,6 +991,8 @@ def main():
         # Mostra aviso se for visitante
         if st.session_state.get("user_type") == "guest":
             st.info("👤 Você está como visitante — suas conversas não serão salvas.", icon="⚠️")
+
+
 
 
 if __name__ == "__main__":
