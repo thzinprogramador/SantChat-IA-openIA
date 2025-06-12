@@ -577,50 +577,50 @@ def render_login_sidebar():
         st.title("SantChat")
 
         if st.session_state.get("user_type") == "guest":
-    if st.session_state.auth_mode == "login":
-        st.subheader("Login")
-        email = st.text_input("E-mail")
-        senha = st.text_input("Senha", type="password")
+            if st.session_state.auth_mode == "login":
+                st.subheader("Login")
+                email = st.text_input("E-mail")
+                senha = st.text_input("Senha", type="password")
 
-        if st.button("Entrar", key="login_btn", use_container_width=True):
-            success, user, message = autenticar_usuario(email, senha)
-            if success:
-                st.session_state.update({
-                    "user_type": "user",
-                    "user_id": user["nome_usuario"].lower(),
-                    "user_data": user,
-                    "auth_mode": "login",
-                    "messages": [{"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}],
-                    "current_chat_id": str(uuid.uuid4())
-                })
-                st.success(message)
-                st.rerun()
-            else:
-                st.error(message)
+                if st.button("Entrar", key="login_btn", use_container_width=True):
+                    success, user, message = autenticar_usuario(email, senha)
+                    if success:
+                        st.session_state.update({
+                            "user_type": "user",
+                            "user_id": user["nome_usuario"].lower(),
+                            "user_data": user,
+                            "auth_mode": "login",
+                            "messages": [{"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}],
+                            "current_chat_id": str(uuid.uuid4())
+                        })
+                        st.success(message)
+                        st.rerun()
+                    else:
+                        st.error(message)
 
-        # Este botão deve estar sempre aqui no modo login
-        if st.button("Não tem conta? Criar uma", key="show_register_btn", use_container_width=True):
-            st.session_state.auth_mode = "register"
-            st.rerun()
+                # Este botão deve estar sempre aqui no modo login
+                if st.button("Não tem conta? Criar uma", key="show_register_btn", use_container_width=True):
+                    st.session_state.auth_mode = "register"
+                    st.rerun()
 
-    elif st.session_state.auth_mode == "register":
-        st.subheader("Criar conta")
-        new_email = st.text_input("Novo e-mail")
-        new_pass = st.text_input("Nova senha", type="password")
-        new_username = st.text_input("Nome de usuário")
+            elif st.session_state.auth_mode == "register":
+                st.subheader("Criar conta")
+                new_email = st.text_input("Novo e-mail")
+                new_pass = st.text_input("Nova senha", type="password")
+                new_username = st.text_input("Nome de usuário")
 
-        if st.button("Registrar", key="register_btn", use_container_width=True):
-            success, message = criar_usuario(new_email, new_pass, new_username)
-            if success:
-                st.success("Conta criada com sucesso!")
-                st.session_state.auth_mode = "login"
-                st.rerun()
-            else:
-                st.error(message)
+                if st.button("Registrar", key="register_btn", use_container_width=True):
+                    success, message = criar_usuario(new_email, new_pass, new_username)
+                    if success:
+                        st.success("Conta criada com sucesso!")
+                        st.session_state.auth_mode = "login"
+                        st.rerun()
+                    else:
+                        st.error(message)
 
-        if st.button("Já tem conta? Logar", key="show_login_btn", use_container_width=True):
-            st.session_state.auth_mode = "login"
-            st.rerun()
+                if st.button("Já tem conta? Logar", key="show_login_btn", use_container_width=True):
+                    st.session_state.auth_mode = "login"
+                    st.rerun()
 
 
             # Formulário de criação de conta
