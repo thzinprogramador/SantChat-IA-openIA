@@ -926,10 +926,8 @@ def main():
     elif choice == "Memória IA" and st.session_state.get("user_data", {}).get("nivel") == -8:
         render_memoria_ia()
     elif choice == "Feedbacks" and st.session_state.get("user_data", {}).get("nivel") == -8:
-        render_feedbacks()
-
-        aplicar_estilo_customizado()
-        render_login_sidebar()
+    render_feedbacks()
+    aplicar_estilo_customizado()
 
         # Mostra aviso se for visitante
         if st.session_state.get("user_type") == "guest":
