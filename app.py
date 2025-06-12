@@ -359,6 +359,16 @@ def initialize_firebase():
             "databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]
         })
 
+def aplicar_estilo_customizado():
+    st.markdown("""
+        <style>
+            /* Adicione seus estilos aqui */
+            .sidebar .sidebar-content {
+                background-color: #1c1c1e;
+                color: white;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
 # --- Funções Auxiliares ---
 def carregar_memoria():
@@ -601,10 +611,6 @@ def render_login_sidebar():
                         else:
                             st.error(message)
 
-                    if st.button("Não tem conta? Criar uma", use_container_width=True):
-                        st.session_state.mostrar_registro = True
-                        st.session_state.show_login = False
-
             else:
                 st.subheader("Criar conta")
                 new_email = st.text_input("Novo e-mail")
@@ -621,9 +627,16 @@ def render_login_sidebar():
                         st.error(message)
 
 
-                if st.button("Não tem conta? Criar uma", key="show_register_btn", use_container_width=True):
-                    st.session_state.show_login_form = False
-                    st.session_state.show_register_form = True
+                if not st.session_state.mostrar_registro:
+                    if st.button("Não tem conta? Criar uma", key="abrir_registro", use_container_width=True):
+                        st.session_state["mostrar_registro"] = True
+                        st.session_state["show_login"] = False
+                        st.rerun()
+                else:
+                    if st.button("Já tem conta? Logar", key="abrir_login", use_container_width=True):
+                        st.session_state["mostrar_registro"] = False
+                        st.session_state["show_login"] = True
+                        st.rerun()
 
             # Formulário de criação de conta
             if st.session_state.show_register_form:
