@@ -590,7 +590,7 @@ def render_login_sidebar():
                             "user_id": user["nome_usuario"].lower(),
                             "user_data": user,
                             "auth_mode": "login",
-                            "messages": [{"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}],
+                            "messages": [{"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Estou agora com você para o que precisar, me conta como posso te apoiar hoje?"}],
                             "current_chat_id": str(uuid.uuid4())
                         })
                         st.success(message)
@@ -655,7 +655,7 @@ def render_login_sidebar():
                 new_chat_id = str(uuid.uuid4())
                 st.session_state.current_chat_id = new_chat_id
                 st.session_state.messages = [
-                    {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
+                    {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Estou agora com você para o que precisar, me conta como posso te apoiar hoje?"}
                 ]
                 st.rerun()
 
@@ -789,7 +789,7 @@ def render_chat_interface():
         # Mostrar histórico de mensagens
         if "messages" not in st.session_state:
             st.session_state.messages = [
-                {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
+                {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Estou agora com você para o que precisar, me conta como posso te apoiar hoje?"}
             ]
 
         for idx, message in enumerate(st.session_state.messages):
@@ -912,7 +912,7 @@ def main():
             "memoria": carregar_memoria(),
             "current_chat_id": str(uuid.uuid4()),
             "messages": [
-                {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Como posso te ajudar hoje?"}
+                {"sender": "bot", "text": "Olá! Sou o SantChat, IA oficial do Santander. Estou agora com você para o que precisar, me conta como posso te apoiar hoje?"}
             ]
         })
 
