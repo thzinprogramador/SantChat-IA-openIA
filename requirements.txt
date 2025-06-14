@@ -8,6 +8,4 @@ streamlit-auth0-component==0.1.5
 streamlit-auth0
 streamlit_oauth
 Markdown
-python-dotenv>=1.0.0
 uuid>=1.30.0
-python-markdown>=3.4.4
