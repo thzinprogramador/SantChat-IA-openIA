@@ -546,11 +546,11 @@ def render_gerenciar_correcoes():
                             st.success("Correção desativada!")
                             st.rerun()
                    else:
-                        if st.button("✅ Reativar", key=f"enable_{correcao_id}"):
-                            db.reference(f"respostas_revisadas/todas_correcoes/{correcao_id}").update({"status": "ativo"})
-                            db.reference(f"respostas_revisadas/por_categoria/{dados['categoria']}/{correcao_id}").update({"status": "ativo"})
-                            st.success("Correção reativada!")
-                            st.rerun()
+                    if st.button("✅ Reativar", key=f"enable_{correcao_id}"):
+                        db.reference(f"respostas_revisadas/todas_correcoes/{correcao_id}").update({"status": "ativo"})
+                        db.reference(f"respostas_revisadas/por_categoria/{dados['categoria']}/{correcao_id}").update({"status": "ativo"})
+                        st.success("Correção reativada!")
+                        st.rerun()
         
                     if st.button(f"✏️ Editar", key=f"edit_{correcao_id}"):
                         st.session_state['editando_correcao'] = dados
