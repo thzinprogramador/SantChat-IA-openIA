@@ -1165,27 +1165,26 @@ def render_feedbacks():
         if filtro_usuario:
             todos_feedbacks = [f for f in todos_feedbacks if filtro_usuario.lower() in f.get('user_id', '').lower()]
 
-        # Após aplicar os filtros, adicione:
+        # Após aplicar os filtros
         items_por_pagina = 10
-        pagina = st.sidebar.number_input('Página', min_value=1, max_value=(len(todos_feedbacks)//items_por_pagina + 1), value=1)
+        pagina = st.sidebar.number_input('Página', min_value=1, 
+                               max_value=(len(todos_feedbacks)//items_por_pagina + 1), 
+                               value=1)
         inicio = (pagina - 1) * items_por_pagina
         fim = inicio + items_por_pagina
 
-        # Modifique o loop para mostrar os feedbacks:
+        # Loop corrigido
         for feedback in todos_feedbacks[inicio:fim]:
-        
-        # Mostra os feedbacks
-        for feedback in todos_feedbacks[:50]:  # Limita a 50 mais recentes
             with st.expander(f"Feedback de {feedback.get('user_id', '')} - {feedback.get('timestamp', '')}"):
                 st.write(f"**Tipo:** {feedback.get('tipo_feedback', '')}")
                 st.write(f"**Pergunta:** {feedback.get('pergunta', '')}")
                 st.write(f"**Resposta:** {feedback.get('resposta', '')}")
                 st.write(f"**Data:** {feedback.get('timestamp', '')}")
                 
-    except Exception as e:
-        st.error(f"Erro ao carregar feedbacks: {str(e)}")
-        # Adicione para debug:
-        st.write("Estrutura atual dos feedbacks:", feedbacks if 'feedbacks' in locals() else "Nenhum dado encontrado")
+         except Exception as e:
+            st.error(f"Erro ao carregar feedbacks: {str(e)}")
+            # Adicione para debug:
+            st.write("Estrutura atual dos feedbacks:", feedbacks if 'feedbacks' in locals() else "Nenhum dado encontrado")
 
 def render_treinar_ia():
     st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
