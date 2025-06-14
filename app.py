@@ -395,23 +395,23 @@ def initialize_firebase():
 
 
 # --- Novas funções para o sistema RAG-like ---
-def salvar_resposta_revisada(user_id, pergunta, resposta_original, resposta_revisada, categoria):
+def salvar_resposta_revisada(revisor_id, pergunta, resposta_original, resposta_revisada, categoria):
     try:
-        ref = db.reference(f"respostas_revisadas/{user_id}")
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        resposta_data = {
+        ref = db.reference(f"respostas_revisadas/{revisor_id}")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        
+        ref.child(timestamp).set({
             "pergunta": pergunta,
             "resposta_original": resposta_original,
             "resposta_revisada": resposta_revisada,
             "categoria": categoria,
-            "revisado_por": st.session_state.user_data.get("nome_usuario", "admin"),
+            "revisor": st.session_state.user_data.get("nome_usuario", "admin"),
             "timestamp": datetime.now().isoformat(),
             "status": "revisado"
-        }
-        ref.child(ts).set(resposta_data)
+        })
         return True
     except Exception as e:
-        st.error(f"Erro ao salvar resposta revisada: {str(e)}")
+        st.error(f"❌ Erro ao salvar resposta revisada: {str(e)}")
         return False
 
 def carregar_respostas_revisadas():
@@ -440,6 +440,60 @@ def similaridade_pergunta(pergunta1, pergunta2):
     palavras2 = set(pergunta2.lower().split())
     intersecao = palavras1.intersection(palavras2)
     return len(intersecao) / max(len(palavras1), len(palavras2), 1)
+
+def carregar_interacoes():
+    """Carrega todas as interações usuário-IA do Firebase"""
+    try:
+        # Referência para os dados no Firebase
+        ref = db.reference("logs/usuarios")
+        todos_usuarios = ref.get() or {}  # Retorna dict vazio se não existir
+        
+        todas_interacoes = []
+        
+        # Percorre todos os usuários
+        for user_id, user_data in todos_usuarios.items():
+            # Pega todos os chats do usuário
+            chats = user_data.get("chats", {})
+            
+            # Percorre cada chat
+            for chat_id, chat_data in chats.items():
+                # Pega todas as mensagens do chat
+                mensagens = chat_data.get("mensagens", [])
+                
+                # Verifica se há mensagens suficientes para formar pares
+                if len(mensagens) < 2:
+                    continue
+                
+                # Percorre as mensagens em pares (pergunta-resposta)
+                for i in range(len(mensagens)-1):
+                    msg_user = mensagens[i]
+                    msg_bot = mensagens[i+1]
+                    
+                    # Verifica se é um par válido (usuário -> bot)
+                    if msg_user["sender"] == "user" and msg_bot["sender"] == "bot":
+                        # Adiciona à lista de interações
+                        todas_interacoes.append({
+                            "user_id": user_id,
+                            "chat_id": chat_id,
+                            "pergunta": msg_user.get("text", ""),
+                            "resposta": msg_bot.get("text", ""),
+                            "timestamp": chat_data.get("ultima_atualizacao", "sem data"),
+                            "metadata": {
+                                "modelo": msg_bot.get("model", "desconhecido"),
+                                "feedback": msg_bot.get("feedback", None)
+                            }
+                        })
+        
+        # Ordena por timestamp (mais recente primeiro)
+        return sorted(
+            todas_interacoes,
+            key=lambda x: x.get("timestamp", "1970-01-01"),
+            reverse=True
+        )
+        
+    except Exception as e:
+        st.error(f"🔥 Erro ao carregar interações: {str(e)}")
+        return []
 
 
 # --- Funções Auxiliares ---
@@ -826,131 +880,95 @@ def render_feedbacks():
 def render_treinar_ia():
     st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
     st.subheader("📚 Treinar IA - Revisão de Respostas")
+
+    # Carrega as interações
+    interacoes = carregar_interacoes()
     
-    # Carrega todo o histórico de mensagens
-    try:
-        ref = db.reference("logs/usuarios")
-        todos_usuarios = ref.get() or {}
-        
-        # Coleta todas as interações de todos os usuários
-        todas_interacoes = []
-        for user_id, user_data in todos_usuarios.items():
-            if "chats" in user_data:
-                for chat_id, chat_data in user_data["chats"].items():
-                    mensagens = chat_data.get("mensagens", [])
-                    for i in range(0, len(mensagens)-1, 2):
-                        if i+1 < len(mensagens) and mensagens[i]["sender"] == "user" and mensagens[i+1]["sender"] == "bot":
-                            todas_interacoes.append({
-                                "user": user_id,
-                                "chat": chat_id,
-                                "pergunta": mensagens[i]["text"],
-                                "resposta": mensagens[i+1]["text"],
-                                "timestamp": chat_data.get("ultima_atualizacao", "")
-                            })
-        
-        # Mostra as interações em cards
-        for idx, interacao in enumerate(todas_interacoes[:50]):  # Limita a 50 mais recentes
-            with st.container():
-                st.markdown(f"""
-                <div style='border: 1px solid #555; border-radius: 8px; padding: 15px; margin-bottom: 15px;'>
-                    <div style='font-weight: bold; color: {COR_PRIMARIA};'>Usuário: {interacao['user']}</div>
-                    <div style='color: #aaa; font-size: 0.8em;'>{interacao['timestamp']}</div>
-                    
-                    <div style='margin: 10px 0; padding: 10px; background: #333; border-radius: 5px;'>
-                        <div style='font-weight: bold;'>❓ Pergunta:</div>
-                        <div>{interacao['pergunta']}</div>
-                    </div>
-                    
-                    <div style='margin: 10px 0; padding: 10px; background: #334; border-radius: 5px;'>
-                        <div style='font-weight: bold;'>🤖 Resposta Original:</div>
-                        <div>{interacao['resposta']}</div>
-                    </div>
-                    
-                    <div style='display: flex; justify-content: space-between; margin-top: 10px;'>
-                        <button onclick='approveResponse({idx})' style='background: #00aa00; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;'>✔ Aprovada</button>
-                        <button onclick='showCorrectionForm({idx})' style='background: #aa0000; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;'>❌ Corrigir</button>
-                    </div>
-                    
-                    <div id='correction-form-{idx}' style='display: none; margin-top: 10px;'>
-                        <textarea id='corrected-answer-{idx}' style='width: 100%; height: 100px; background: #333; color: white; border: 1px solid #555; padding: 8px;' placeholder='Digite a resposta corrigida...'></textarea>
-                        <select id='category-{idx}' style='width: 100%; margin: 5px 0; background: #333; color: white; border: 1px solid #555; padding: 5px;'>
-                            <option value='geral'>Geral</option>
-                            <option value='produtos'>Produtos</option>
-                            <option value='contas'>Contas</option>
-                            <option value='investimentos'>Investimentos</option>
-                            <option value='cartoes'>Cartões</option>
-                        </select>
-                        <button onclick='submitCorrection({idx})' style='background: {COR_PRIMARIA}; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;'>Enviar Correção</button>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Adicione os callbacks JavaScript
-                components.html(f"""
-                <script>
-                    function showCorrectionForm(idx) {{
-                        document.getElementById('correction-form-'+idx).style.display = 'block';
-                    }}
-                    
-                    function submitCorrection(idx) {{
-                        const correctedAnswer = document.getElementById('corrected-answer-'+idx).value;
-                        const category = document.getElementById('category-'+idx).value;
-                        
-                        // Envia para o Streamlit
-                        window.parent.postMessage({{
-                            type: 'submitCorrection',
-                            idx: idx,
-                            correctedAnswer: correctedAnswer,
-                            category: category,
-                            pergunta: `{interacao['pergunta']}`,
-                            respostaOriginal: `{interacao['resposta']}`
-                        }}, '*');
-                    }}
-                    
-                    function approveResponse(idx) {{
-                        window.parent.postMessage({{
-                            type: 'approveResponse',
-                            idx: idx,
-                            pergunta: `{interacao['pergunta']}`,
-                            respostaOriginal: `{interacao['resposta']}`
-                        }}, '*');
-                    }}
-                </script>
-                """, height=0)
-                
-        # Listener para os eventos JavaScript
-        correction_data = components.html("""
-        <script>
-            window.correctionData = {};
-            window.addEventListener('message', (event) => {
-                if (event.data.type === 'submitCorrection' || event.data.type === 'approveResponse') {
-                    window.correctionData = event.data;
-                    window.parent.document.querySelector('iframe').contentWindow.document.querySelector('button').click();
-                }
-            });
-        </script>
-        <button onclick='window.dummy=1' style='display:none;'></button>
-        """, height=0)
-        
-        # Processa as correções enviadas
-        if hasattr(correction_data, 'type'):
-            if correction_data.type == 'submitCorrection':
-                if salvar_resposta_revisada(
-                    st.session_state.user_id,
-                    correction_data.pergunta,
-                    correction_data.respostaOriginal,
-                    correction_data.correctedAnswer,
-                    correction_data.category
-                ):
-                    st.success("✅ Resposta revisada salva com sucesso! Esta resposta será usada para perguntas similares no futuro.")
-                else:
-                    st.error("❌ Erro ao salvar a resposta revisada.")
+    if not interacoes:
+        st.warning("Nenhuma interação encontrada para revisão")
+        return
+
+    # Filtros e configurações
+    st.sidebar.subheader("Filtros")
+    filtro_usuario = st.sidebar.text_input("Filtrar por usuário")
+    filtro_data = st.sidebar.date_input("Filtrar por data")
+    items_por_pagina = st.sidebar.selectbox("Itens por página", [10, 25, 50], index=0)
+
+    # Aplica filtros
+    if filtro_usuario:
+        interacoes = [i for i in interacoes if filtro_usuario.lower() in i['user'].lower()]
+    
+    if filtro_data:
+        interacoes = [i for i in interacoes if datetime.strptime(i['timestamp'], "%Y-%m-%dT%H:%M:%S").date() == filtro_data]
+
+    # Paginação
+    total_paginas = max(1, (len(interacoes) + items_por_pagina - 1) // items_por_pagina)
+    pagina = st.number_input("Página", 1, total_paginas, 1)
+    inicio = (pagina - 1) * items_por_pagina
+    fim = pagina * items_por_pagina
+
+    # Mostra as interações filtradas e paginadas
+    for idx, interacao in enumerate(interacoes[inicio:fim], start=inicio):
+        with st.expander(f"Interação {idx+1} - {interacao['user']} ({interacao['timestamp']})"):
+            # Card de interação
+            col1, col2 = st.columns([3, 1])
             
-            elif correction_data.type == 'approveResponse':
-                st.success("✔ Resposta marcada como correta. Nenhuma ação adicional necessária.")
+            with col1:
+                st.markdown(f"""
+                **❓ Pergunta:**  
+                {interacao['pergunta']}
                 
-    except Exception as e:
-        st.error(f"Erro ao carregar interações: {str(e)}")
+                **🤖 Resposta Original:**  
+                {interacao['resposta']}
+                """)
+            
+            with col2:
+                # Botões de ação
+                if st.button("✅ Aprovar", key=f"aprovar_{idx}"):
+                    if salvar_resposta_revisada(
+                        st.session_state.user_id,
+                        interacao['pergunta'],
+                        interacao['resposta'],
+                        interacao['resposta'],  # Mantém a mesma resposta
+                        "aprovado"
+                    ):
+                        st.success("Aprovada! Esta resposta será usada como referência.")
+                        st.rerun()
+                
+                if st.button("✏️ Corrigir", key=f"corrigir_{idx}"):
+                    st.session_state[f'editando_{idx}'] = True
+            
+            # Formulário de edição (aparece apenas quando clicar em Corrigir)
+            if st.session_state.get(f'editando_{idx}'):
+                with st.form(key=f"form_correcao_{idx}"):
+                    nova_resposta = st.text_area(
+                        "Resposta corrigida:",
+                        value=interacao['resposta'],
+                        key=f"nova_resposta_{idx}"
+                    )
+                    
+                    categoria = st.selectbox(
+                        "Categoria:",
+                        ["Geral", "Produtos", "Contas", "Investimentos", "Cartões"],
+                        key=f"categoria_{idx}"
+                    )
+                    
+                    if st.form_submit_button("💾 Salvar Correção"):
+                        if salvar_resposta_revisada(
+                            st.session_state.user_id,
+                            interacao['pergunta'],
+                            interacao['resposta'],
+                            nova_resposta,
+                            categoria
+                        ):
+                            st.success("Correção salva com sucesso!")
+                            st.session_state.pop(f'editando_{idx}', None)
+                            st.rerun()
+                        else:
+                            st.error("Erro ao salvar correção")
+
+    # Estatísticas
+    st.markdown(f"*Mostrando {len(interacoes[inicio:fim])} de {len(interacoes)} interações*")
 
 
 def compensar_header_fixo():
