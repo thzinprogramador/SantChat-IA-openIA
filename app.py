@@ -420,16 +420,16 @@ def salvar_resposta_revisada(revisor_id, pergunta, resposta_original, resposta_r
         ref = db.reference("respostas_revisadas")
         
         # 1. Na categoria específica
-        ref.child(f"por_categoria/{categoria}/{correcao_id}").set(dados_correcao)
+        ref_base.child(f"por_categoria/{categoria}/{correcao_id}").set(dados_correcao)
         
         # 2. Em todas as correções (para busca)
-        ref.child(f"todas_correcoes/{correcao_id}").set(dados_correcao)
+        ref_base.child(f"todas_correcoes/{correcao_id}").set(dados_correcao)
         
         # 3. Atualiza lista de categorias
-        categorias = ref.child("categorias").get() or []
+        categorias = ref_base.child("categorias").get() or []
         if categoria not in categorias:
             categorias.append(categoria)
-            ref.child("categorias").set(categorias))
+            ref_base.child("categorias").set(categorias)
 
         # 4. Força atualização imediata 
         db.reference().update({})
