@@ -417,19 +417,22 @@ def salvar_resposta_revisada(revisor_id, pergunta, resposta_original, resposta_r
         }
         
         # Salva em três lugares diferentes para fácil acesso
-        ref_base = db.reference("respostas_revisadas")
+        ref = db.reference("respostas_revisadas")
         
         # 1. Na categoria específica
-        ref_base.child(f"por_categoria/{categoria}/{correcao_id}").set(dados_correcao)
+        ref.child(f"por_categoria/{categoria}/{correcao_id}").set(dados_correcao)
         
         # 2. Em todas as correções (para busca)
-        ref_base.child(f"todas_correcoes/{correcao_id}").set(dados_correcao)
+        ref.child(f"todas_correcoes/{correcao_id}").set(dados_correcao)
         
         # 3. Atualiza lista de categorias
-        categorias = ref_base.child("categorias").get() or []
+        categorias = ref.child("categorias").get() or []
         if categoria not in categorias:
             categorias.append(categoria)
-            ref_base.child("categorias").set(categorias)
+            ref.child("categorias").set(categorias))
+
+        # 4. Força atualização imediata 
+        db.reference().update({})
         
         return True
     except Exception as e:
@@ -459,16 +462,10 @@ def buscar_correcoes(categoria=None, termo_busca=None):
         return {}
 
 def render_gerenciar_correcoes():
-    """
-    Exibe a interface para gerenciar correções de respostas.
-    Permite filtrar, visualizar, editar, ativar/desativar e excluir correções.
-    Acesso restrito a usuários com nível de desenvolvedor.
-    """
     st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
     st.subheader("📝 Gerenciar Correções")
     
     try:
-        # Carrega todas as categorias
         categorias = db.reference("respostas_revisadas/categorias").get() or []
         
         # Filtros
@@ -483,36 +480,23 @@ def render_gerenciar_correcoes():
             termo_busca = st.text_input("Buscar por texto:")
         
         # Carrega as correções
-        if categoria_selecionada == "Todas":
-            ref_correcoes = db.reference("respostas_revisadas/todas_correcoes")
-        else:
-            ref_correcoes = db.reference(f"respostas_revisadas/por_categoria/{categoria_selecionada}")
-        
-        correcoes = ref_correcoes.get() or {}
-        
-        # Aplica filtro de texto
-        if termo_busca:
-            correcoes = {
-                k: v for k, v in correcoes.items() 
-                if termo_busca.lower() in v.get("pergunta", "").lower() 
-                or termo_busca.lower() in v.get("resposta_revisada", "").lower()
-            }
+        correcoes = buscar_correcoes(categoria_selecionada, termo_busca)
         
         if not correcoes:
             st.info("Nenhuma correção encontrada com esses filtros")
             return
         
-        # Mostra as correções
+        # Mostra as correções sem expanders aninhados
         for correcao_id, dados in correcoes.items():
-            with st.expander(f"Correção {correcao_id[:6]}... - {dados.get('categoria', '')}"):
+            status_icon = "🟢" if dados.get('status') == "ativo" else "🔴"
+            edit_icon = "✏️" if dados.get('editado', False) else "✅"
+            
+            # Usando st.container() ao invés de expander aninhado
+            with st.container():
+                st.markdown(f"### {status_icon} {edit_icon} Correção {correcao_id[:6]}... - {dados.get('categoria', '')}")
+                
                 col1, col2 = st.columns([4, 1])
-
                 with col1:
-                    status_icon = "🟢" if dados.get('status') == "ativo" else "🔴"
-                    edit_icon = "✏️" if dados.get('editado', False) else "✅"
-
-                with st.expander(f"{status_icon} {edit_icon} Correção {correcao_id[:6]}... - {dados.get('categoria', '')}"):
-
                     st.markdown(f"""
                     **📅 Data:** {dados.get('timestamp', '')}  
                     **👤 Revisor:** {dados.get('revisor', '')}  
@@ -528,8 +512,9 @@ def render_gerenciar_correcoes():
                     **📝 Resposta Revisada:**  
                     {dados.get('resposta_revisada', '')}
                     """)
-    
+                
                 with col2:
+                    # Botões de ação...
                     if st.button(f"🗑️ Excluir", key=f"del_{correcao_id}"):
                         if st.checkbox(f"Confirmar exclusão da correção {correcao_id[:6]}...?", key=f"confirm_del_{correcao_id}"):
                             # Remove de todos os lugares
@@ -1263,6 +1248,7 @@ def render_treinar_ia():
                         editado=True  # Foi editada
                     ):
                         st.success("Correção salva em Gerenciar Correções!")
+                        st.cache_data.clear()
                         st.session_state.pop(f'editando_{idx}', None)
                         st.rerun()
 
