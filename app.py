@@ -444,55 +444,53 @@ def similaridade_pergunta(pergunta1, pergunta2):
 def carregar_interacoes():
     """Carrega todas as interações usuário-IA do Firebase"""
     try:
-        # Referência para os dados no Firebase
         ref = db.reference("logs/usuarios")
-        todos_usuarios = ref.get() or {}  # Retorna dict vazio se não existir
+        todos_usuarios = ref.get() or {}
         
         todas_interacoes = []
         
-        # Percorre todos os usuários
         for user_id, user_data in todos_usuarios.items():
-            # Pega todos os chats do usuário
             chats = user_data.get("chats", {})
             
-            # Percorre cada chat
             for chat_id, chat_data in chats.items():
-                # Pega todas as mensagens do chat
                 mensagens = chat_data.get("mensagens", [])
                 
-                # Verifica se há mensagens suficientes para formar pares
-                if len(mensagens) < 2:
+                # Debug: Verifique a estrutura das mensagens
+                if not isinstance(mensagens, list):
+                    st.warning(f"Estrutura inválida de mensagens para chat {chat_id}")
                     continue
                 
-                # Percorre as mensagens em pares (pergunta-resposta)
+                # Percorre as mensagens em pares
                 for i in range(len(mensagens)-1):
-                    msg_user = mensagens[i]
-                    msg_bot = mensagens[i+1]
-                    
-                    # Verifica se é um par válido (usuário -> bot)
-                    if msg_user["sender"] == "user" and msg_bot["sender"] == "bot":
-                        # Adiciona à lista de interações
+                    if mensagens[i]["sender"] == "user" and mensagens[i+1]["sender"] == "bot":
+                        timestamp = chat_data.get("ultima_atualizacao")
+                        if not timestamp:
+                            timestamp = datetime.now().isoformat()
+                            
                         todas_interacoes.append({
-                            "user_id": user_id,
+                            "user": user_id,
                             "chat_id": chat_id,
-                            "pergunta": msg_user.get("text", ""),
-                            "resposta": msg_bot.get("text", ""),
-                            "timestamp": chat_data.get("ultima_atualizacao", "sem data"),
+                            "pergunta": mensagens[i].get("text", ""),
+                            "resposta": mensagens[i+1].get("text", ""),
+                            "timestamp": timestamp,
                             "metadata": {
-                                "modelo": msg_bot.get("model", "desconhecido"),
-                                "feedback": msg_bot.get("feedback", None)
+                                "feedback": mensagens[i+1].get("feedback", None)
                             }
                         })
         
-        # Ordena por timestamp (mais recente primeiro)
-        return sorted(
-            todas_interacoes,
-            key=lambda x: x.get("timestamp", "1970-01-01"),
-            reverse=True
-        )
+        # Ordena por timestamp
+        todas_interacoes.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+        
+        # Debug: Mostra quantas interações foram encontradas
+        st.session_state['debug_interacoes_count'] = len(todas_interacoes)
+        
+        return todas_interacoes
         
     except Exception as e:
-        st.error(f"🔥 Erro ao carregar interações: {str(e)}")
+        st.error(f"Erro ao carregar interações: {str(e)}")
+        # Debug adicional
+        if 'todos_usuarios' in locals():
+            st.write("Estrutura dos usuários:", list(todos_usuarios.keys()))
         return []
 
 
@@ -856,119 +854,140 @@ def render_memoria_ia():
 
 def render_feedbacks():
     st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
-    st.subheader("Feedbacks dos Usuários")
+    st.subheader("📊 Feedbacks dos Usuários (Últimos 50)")
     
     try:
         ref = db.reference("logs/feedbacks")
         feedbacks = ref.get()
         
         if not feedbacks:
-            st.info("Nenhum feedback encontrado")
+            st.info("Nenhum feedback encontrado no banco de dados")
             return
-            
-        for user_id, user_feedbacks in feedbacks.items():
-            with st.expander(f"Feedbacks de {user_id}"):
-                for timestamp, feedback in user_feedbacks.items():
-                    st.write(f"**Data:** {feedback.get('timestamp')}")
-                    st.write(f"**Pergunta:** {feedback.get('pergunta')}")
-                    st.write(f"**Resposta:** {feedback.get('resposta')}")
-                    st.write(f"**Tipo Feedback:** {feedback.get('tipo_feedback')}")
-                    st.divider()
+        
+        # Cria lista plana de todos os feedbacks
+        todos_feedbacks = []
+        for user_id, user_data in feedbacks.items():
+            for timestamp, feedback in user_data.items():
+                feedback['user_id'] = user_id
+                feedback['timestamp'] = timestamp
+                todos_feedbacks.append(feedback)
+        
+        # Ordena por timestamp (mais recente primeiro)
+        todos_feedbacks.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+        # Filtros
+        st.sidebar.subheader("Filtros")
+        filtro_tipo = st.sidebar.selectbox("Tipo de Feedback", ["Todos", "Positivo", "Negativo"])
+        filtro_usuario = st.sidebar.text_input("Filtrar por ID de Usuário")
+        
+        # Aplica filtros
+        if filtro_tipo != "Todos":
+            todos_feedbacks = [f for f in todos_feedbacks if f.get('tipo_feedback', '').lower() == filtro_tipo.lower()]
+        
+        if filtro_usuario:
+            todos_feedbacks = [f for f in todos_feedbacks if filtro_usuario.lower() in f.get('user_id', '').lower()]
+        
+        # Mostra os feedbacks
+        for feedback in todos_feedbacks[:50]:  # Limita a 50 mais recentes
+            with st.expander(f"Feedback de {feedback.get('user_id', '')} - {feedback.get('timestamp', '')}"):
+                st.write(f"**Tipo:** {feedback.get('tipo_feedback', '')}")
+                st.write(f"**Pergunta:** {feedback.get('pergunta', '')}")
+                st.write(f"**Resposta:** {feedback.get('resposta', '')}")
+                st.write(f"**Data:** {feedback.get('timestamp', '')}")
+                
     except Exception as e:
         st.error(f"Erro ao carregar feedbacks: {str(e)}")
+        # Adicione para debug:
+        st.write("Estrutura atual dos feedbacks:", feedbacks if 'feedbacks' in locals() else "Nenhum dado encontrado")
 
 def render_treinar_ia():
     st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
     st.subheader("📚 Treinar IA - Revisão de Respostas")
-
-    # Carrega as interações
-    interacoes = carregar_interacoes()
+    
+    # Debug: Mostra o status do carregamento
+    with st.spinner("Carregando interações..."):
+        interacoes = carregar_interacoes()
+    
+    # Debug: Mostra quantas interações foram encontradas
+    if 'debug_interacoes_count' in st.session_state:
+        st.write(f"🔍 {st.session_state.debug_interacoes_count} interações encontradas no banco de dados")
     
     if not interacoes:
         st.warning("Nenhuma interação encontrada para revisão")
+        st.info("Dicas:")
+        st.info("- Interaja com o chat para gerar dados")
+        st.info("- Verifique a estrutura do Firebase em 'logs/usuarios'")
         return
-
-    # Filtros e configurações
+    
+    # Filtros
     st.sidebar.subheader("Filtros")
     filtro_usuario = st.sidebar.text_input("Filtrar por usuário")
     filtro_data = st.sidebar.date_input("Filtrar por data")
-    items_por_pagina = st.sidebar.selectbox("Itens por página", [10, 25, 50], index=0)
-
+    
     # Aplica filtros
     if filtro_usuario:
         interacoes = [i for i in interacoes if filtro_usuario.lower() in i['user'].lower()]
     
     if filtro_data:
-        interacoes = [i for i in interacoes if datetime.strptime(i['timestamp'], "%Y-%m-%dT%H:%M:%S").date() == filtro_data]
-
-    # Paginação
-    total_paginas = max(1, (len(interacoes) + items_por_pagina - 1) // items_por_pagina)
-    pagina = st.number_input("Página", 1, total_paginas, 1)
-    inicio = (pagina - 1) * items_por_pagina
-    fim = pagina * items_por_pagina
-
-    # Mostra as interações filtradas e paginadas
-    for idx, interacao in enumerate(interacoes[inicio:fim], start=inicio):
+        interacoes = [i for i in interacoes if 
+                     datetime.strptime(i['timestamp'].split('T')[0], "%Y-%m-%d").date() == filtro_data]
+    
+    # Mostra as interações
+    for idx, interacao in enumerate(interacoes[:50]):  # Limita a 50 itens
         with st.expander(f"Interação {idx+1} - {interacao['user']} ({interacao['timestamp']})"):
-            # Card de interação
-            col1, col2 = st.columns([3, 1])
+            st.markdown(f"""
+            **❓ Pergunta:**  
+            {interacao['pergunta']}
             
+            **🤖 Resposta Original:**  
+            {interacao['resposta']}
+            """)
+            
+            # Botões de ação
+            col1, col2 = st.columns(2)
             with col1:
-                st.markdown(f"""
-                **❓ Pergunta:**  
-                {interacao['pergunta']}
-                
-                **🤖 Resposta Original:**  
-                {interacao['resposta']}
-                """)
+                if st.button("✅ Aprovar", key=f"aprovar_{idx}"):
+                    salvar_resposta_revisada(
+                        st.session_state.user_id,
+                        interacao['pergunta'],
+                        interacao['resposta'],
+                        interacao['resposta'],
+                        "aprovado"
+                    )
+                    st.success("Resposta aprovada!")
+                    st.rerun()
             
             with col2:
-                # Botões de ação
-                if st.button("✅ Aprovar", key=f"aprovar_{idx}"):
+                if st.button("✏️ Corrigir", key=f"corrigir_{idx}"):
+                    st.session_state[f'editando_{idx}'] = True
+            
+            # Formulário de correção
+            if st.session_state.get(f'editando_{idx}'):
+                nova_resposta = st.text_area(
+                    "Resposta corrigida:",
+                    value=interacao['resposta'],
+                    key=f"correcao_{idx}"
+                )
+                
+                categoria = st.selectbox(
+                    "Categoria:",
+                    ["Geral", "Produtos", "Contas", "Investimentos", "Cartões"],
+                    key=f"categoria_{idx}"
+                )
+                
+                if st.button("💾 Salvar Correção", key=f"salvar_{idx}"):
                     if salvar_resposta_revisada(
                         st.session_state.user_id,
                         interacao['pergunta'],
                         interacao['resposta'],
-                        interacao['resposta'],  # Mantém a mesma resposta
-                        "aprovado"
+                        nova_resposta,
+                        categoria
                     ):
-                        st.success("Aprovada! Esta resposta será usada como referência.")
+                        st.success("Correção salva com sucesso!")
+                        st.session_state.pop(f'editando_{idx}', None)
                         st.rerun()
-                
-                if st.button("✏️ Corrigir", key=f"corrigir_{idx}"):
-                    st.session_state[f'editando_{idx}'] = True
-            
-            # Formulário de edição (aparece apenas quando clicar em Corrigir)
-            if st.session_state.get(f'editando_{idx}'):
-                with st.form(key=f"form_correcao_{idx}"):
-                    nova_resposta = st.text_area(
-                        "Resposta corrigida:",
-                        value=interacao['resposta'],
-                        key=f"nova_resposta_{idx}"
-                    )
-                    
-                    categoria = st.selectbox(
-                        "Categoria:",
-                        ["Geral", "Produtos", "Contas", "Investimentos", "Cartões"],
-                        key=f"categoria_{idx}"
-                    )
-                    
-                    if st.form_submit_button("💾 Salvar Correção"):
-                        if salvar_resposta_revisada(
-                            st.session_state.user_id,
-                            interacao['pergunta'],
-                            interacao['resposta'],
-                            nova_resposta,
-                            categoria
-                        ):
-                            st.success("Correção salva com sucesso!")
-                            st.session_state.pop(f'editando_{idx}', None)
-                            st.rerun()
-                        else:
-                            st.error("Erro ao salvar correção")
-
-    # Estatísticas
-    st.markdown(f"*Mostrando {len(interacoes[inicio:fim])} de {len(interacoes)} interações*")
+                    else:
+                        st.error("Erro ao salvar correção")
 
 
 def compensar_header_fixo():
@@ -1169,6 +1188,8 @@ def aplicar_estilo_customizado():
 
 # --- Função Principal ---
 def main():
+    # Adicione temporariamente no main() para debug
+    st.write("Estrutura do Firebase:", db.reference("logs").get())
     # Carregar configurações
     load_css()
     initialize_firebase()
