@@ -1083,21 +1083,6 @@ def render_chat_interface():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-    # Input de mensagem (fixo na parte inferior)
-    with st.form(key="message_form", clear_on_submit=True):
-        user_input = st.text_area(
-            "Digite sua mensagem:", 
-            key="user_input", 
-            placeholder="Digite sua mensagem...",
-            label_visibility="collapsed"
-        )
-        col1, col2 = st.columns([1, 0.2])
-        with col1:
-            submit_button = st.form_submit_button(label="Enviar", use_container_width=True)
-        with col2:
-            if st.form_submit_button("Limpar", use_container_width=True):
-                user_input = ""
-                st.rerun()
         
         if submit_button and user_input:
             # Verificar se é um comando de dev
