@@ -396,7 +396,7 @@ def initialize_firebase():
 
 
 # --- Novas funções para o sistema RAG-like ---
-def salvar_resposta_revisada(revisor_id, pergunta, resposta_original, resposta_revisada, categoria):
+def salvar_resposta_revisada(revisor_id, pergunta, resposta_original, resposta_revisada, categoria, editado=False):
     try:
         # Gera um ID único para a correção
         correcao_id = str(uuid.uuid4())
@@ -508,21 +508,25 @@ def render_gerenciar_correcoes():
                 col1, col2 = st.columns([4, 1])
 
                 with col1:
+                    status_icon = "🟢" if dados.get('status') == "ativo" else "🔴"
+                    edit_icon = "✏️" if dados.get('editado', False) else "✅"
+
+                    with st.expander(f"{status_icon} {edit_icon} Correção {correcao_id[:6]}... - {dados.get('categoria', '')}"):
+
                     st.markdown(f"""
                     **📅 Data:** {dados.get('timestamp', '')}  
                     **👤 Revisor:** {dados.get('revisor', '')}  
                     **🏷️ Categoria:** {dados.get('categoria', '')}  
-        
+                    **📊 Status:** {dados.get('status', 'ativo')}  
+                    **🔢 Vezes usada:** {dados.get('uso_count', 0)}  
+                    **⏱️ Último uso:** {dados.get('last_used', 'Nunca')}  
+                    **Tipo:** {'Corrigida' if dados.get('editado', False) else 'Aprovada'}  
+
                     **❓ Pergunta Original:**  
                     {dados.get('pergunta', '')}
-        
+
                     **📝 Resposta Revisada:**  
                     {dados.get('resposta_revisada', '')}
-        
-                    **📊 Estatísticas:**  
-                    🔢 Vezes usada: {dados.get('uso_count', 0)}  
-                    ⏱️ Último uso: {dados.get('last_used', 'Nunca')}  
-                    ✅ Status: {dados.get('status', 'ativo')}
                     """)
     
                 with col2:
@@ -1155,7 +1159,8 @@ def render_feedbacks():
         
         # Aplica filtros
         if filtro_tipo != "Todos":
-            todos_feedbacks = [f for f in todos_feedbacks if f.get('tipo_feedback', '').lower() == filtro_tipo.lower()]
+            todos_feedbacks = [f for f in todos_feedbacks 
+                              if f.get('metadata', {}).get('feedback', '').lower() == filtro_tipo.lower()]
         
         if filtro_usuario:
             todos_feedbacks = [f for f in todos_feedbacks if filtro_usuario.lower() in f.get('user_id', '').lower()]
@@ -1186,19 +1191,11 @@ def render_treinar_ia():
     st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
     st.subheader("📚 Treinar IA - Revisão de Respostas")
     
-    # Debug: Mostra o status do carregamento
     with st.spinner("Carregando interações..."):
         interacoes = carregar_interacoes()
     
-    # Debug: Mostra quantas interações foram encontradas
-    if 'debug_interacoes_count' in st.session_state:
-        st.write(f"🔍 {st.session_state.debug_interacoes_count} interações encontradas no banco de dados")
-    
     if not interacoes:
         st.warning("Nenhuma interação encontrada para revisão")
-        st.info("Dicas:")
-        st.info("- Interaja com o chat para gerar dados")
-        st.info("- Verifique a estrutura do Firebase em 'logs/usuarios'")
         return
     
     # Filtros
@@ -1215,8 +1212,9 @@ def render_treinar_ia():
                      datetime.strptime(i['timestamp'].split('T')[0], "%Y-%m-%d").date() == filtro_data]
     
     # Mostra as interações
-    for idx, interacao in enumerate(interacoes[:50]):  # Limita a 50 itens
-        with st.expander(f"Interação {idx+1} - {interacao['user']} ({interacao['timestamp']})"):
+    for idx, interacao in enumerate(interacoes[:50]):
+        status_cor = "🟢" if interacao.get('status') == "aprovado" else "✏️"
+        with st.expander(f"{status_cor} Interação {idx+1} - {interacao['user']} ({interacao['timestamp']})"):
             st.markdown(f"""
             **❓ Pergunta:**  
             {interacao['pergunta']}
@@ -1225,25 +1223,24 @@ def render_treinar_ia():
             {interacao['resposta']}
             """)
             
-            # Botões de ação
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("✅ Aprovar", key=f"aprovar_{idx}"):
-                    salvar_resposta_revisada(
+                    if salvar_resposta_revisada(
                         st.session_state.user_id,
                         interacao['pergunta'],
                         interacao['resposta'],
                         interacao['resposta'],
-                        "aprovado"
-                    )
-                    st.success("Resposta aprovada!")
-                    st.rerun()
-            
+                        "aprovado",
+                        editado=False  # Não foi editada
+                    ):
+                        st.success("Resposta aprovada e salva em Gerenciar Correções!")
+                        st.rerun()
+   
             with col2:
                 if st.button("✏️ Corrigir", key=f"corrigir_{idx}"):
                     st.session_state[f'editando_{idx}'] = True
             
-            # Formulário de correção
             if st.session_state.get(f'editando_{idx}'):
                 nova_resposta = st.text_area(
                     "Resposta corrigida:",
@@ -1263,13 +1260,12 @@ def render_treinar_ia():
                         interacao['pergunta'],
                         interacao['resposta'],
                         nova_resposta,
-                        categoria
+                        categoria,
+                        editado=True  # Foi editada
                     ):
-                        st.success("Correção salva com sucesso!")
+                        st.success("Correção salva em Gerenciar Correções!")
                         st.session_state.pop(f'editando_{idx}', None)
                         st.rerun()
-                    else:
-                        st.error("Erro ao salvar correção")
 
 
 def compensar_header_fixo():
@@ -1481,6 +1477,8 @@ def main():
         render_feedbacks()
     elif choice == "Treinar IA" and st.session_state.get("user_data", {}).get("nivel") == -8:
         render_treinar_ia()
+    elif choice == "Gerenciar Correções" and st.session_state.get("user_data", {}).get("nivel") == -8:
+    render_gerenciar_correcoes()
         
         aplicar_estilo_customizado()
 
