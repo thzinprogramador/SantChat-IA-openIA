@@ -1478,7 +1478,7 @@ def main():
     elif choice == "Treinar IA" and st.session_state.get("user_data", {}).get("nivel") == -8:
         render_treinar_ia()
     elif choice == "Gerenciar Correções" and st.session_state.get("user_data", {}).get("nivel") == -8:
-    render_gerenciar_correcoes()
+        render_gerenciar_correcoes()
         
         aplicar_estilo_customizado()
 
