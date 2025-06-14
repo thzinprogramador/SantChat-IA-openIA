@@ -511,7 +511,7 @@ def render_gerenciar_correcoes():
                     status_icon = "🟢" if dados.get('status') == "ativo" else "🔴"
                     edit_icon = "✏️" if dados.get('editado', False) else "✅"
 
-                    with st.expander(f"{status_icon} {edit_icon} Correção {correcao_id[:6]}... - {dados.get('categoria', '')}"):
+                with st.expander(f"{status_icon} {edit_icon} Correção {correcao_id[:6]}... - {dados.get('categoria', '')}"):
 
                     st.markdown(f"""
                     **📅 Data:** {dados.get('timestamp', '')}  
