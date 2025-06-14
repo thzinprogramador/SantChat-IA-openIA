@@ -1080,14 +1080,14 @@ def render_chat_interface():
 
             st.rerun()
 
-    st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
 
         
-            if submit_button and user_input:
-                # Verificar se é um comando de dev
-                user_data = st.session_state.get("user_data", {})
-                success, msg = processar_comando_dev(user_input, user_data)
+        if submit_button and user_input:
+            # Verificar se é um comando de dev
+            user_data = st.session_state.get("user_data", {})
+            success, msg = processar_comando_dev(user_input, user_data)
             
             if success is not None:
                 if success:
