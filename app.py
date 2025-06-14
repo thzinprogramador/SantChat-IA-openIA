@@ -7,7 +7,8 @@ import requests
 import firebase_admin
 import streamlit.components.v1 as components
 from firebase_admin import credentials, db
-from datetime import datetime, timedelta  
+from datetime import datetime, timedelta
+from difflib import SequenceMatcher
 from markdown import markdown
 
 # --- Configurações de Cores ---
@@ -397,22 +398,204 @@ def initialize_firebase():
 # --- Novas funções para o sistema RAG-like ---
 def salvar_resposta_revisada(revisor_id, pergunta, resposta_original, resposta_revisada, categoria):
     try:
-        ref = db.reference(f"respostas_revisadas/{revisor_id}")
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        # Gera um ID único para a correção
+        correcao_id = str(uuid.uuid4())
+        timestamp = datetime.now().isoformat()
         
-        ref.child(timestamp).set({
+        # Dados da correção
+        dados_correcao = {
+            "id": correcao_id,
             "pergunta": pergunta,
             "resposta_original": resposta_original,
             "resposta_revisada": resposta_revisada,
             "categoria": categoria,
             "revisor": st.session_state.user_data.get("nome_usuario", "admin"),
-            "timestamp": datetime.now().isoformat(),
-            "status": "revisado"
-        })
+            "timestamp": timestamp,
+            "status": "ativo",  # Agora temos status ativo/inativo
+            "uso_count": 0,  # Contador de vezes usada
+            "last_used": None  # Quando foi usada pela última vez
+        }
+        
+        # Salva em três lugares diferentes para fácil acesso
+        ref_base = db.reference("respostas_revisadas")
+        
+        # 1. Na categoria específica
+        ref_base.child(f"por_categoria/{categoria}/{correcao_id}").set(dados_correcao)
+        
+        # 2. Em todas as correções (para busca)
+        ref_base.child(f"todas_correcoes/{correcao_id}").set(dados_correcao)
+        
+        # 3. Atualiza lista de categorias
+        categorias = ref_base.child("categorias").get() or []
+        if categoria not in categorias:
+            categorias.append(categoria)
+            ref_base.child("categorias").set(categorias)
+        
         return True
     except Exception as e:
-        st.error(f"❌ Erro ao salvar resposta revisada: {str(e)}")
+        st.error(f"Erro ao salvar correção: {str(e)}")
         return False
+
+def buscar_correcoes(categoria=None, termo_busca=None):
+    try:
+        if categoria and categoria != "Todas":
+            ref = db.reference(f"respostas_revisadas/por_categoria/{categoria}")
+        else:
+            ref = db.reference("respostas_revisadas/todas_correcoes")
+        
+        correcoes = ref.get() or {}
+        
+        if termo_busca:
+            correcoes = {
+                k: v for k, v in correcoes.items()
+                if (termo_busca.lower() in v.get("pergunta", "").lower() or
+                    termo_busca.lower() in v.get("resposta_revisada", "").lower())
+            }
+        
+        return correcoes
+    
+    except Exception as e:
+        st.error(f"Erro ao buscar correções: {str(e)}")
+        return {}
+
+def render_gerenciar_correcoes():
+    """
+    Exibe a interface para gerenciar correções de respostas.
+    Permite filtrar, visualizar, editar, ativar/desativar e excluir correções.
+    Acesso restrito a usuários com nível de desenvolvedor.
+    """
+    st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
+    st.subheader("📝 Gerenciar Correções")
+    
+    try:
+        # Carrega todas as categorias
+        categorias = db.reference("respostas_revisadas/categorias").get() or []
+        
+        # Filtros
+        col1, col2 = st.columns(2)
+        with col1:
+            categoria_selecionada = st.selectbox(
+                "Filtrar por categoria:",
+                ["Todas"] + categorias
+            )
+        
+        with col2:
+            termo_busca = st.text_input("Buscar por texto:")
+        
+        # Carrega as correções
+        if categoria_selecionada == "Todas":
+            ref_correcoes = db.reference("respostas_revisadas/todas_correcoes")
+        else:
+            ref_correcoes = db.reference(f"respostas_revisadas/por_categoria/{categoria_selecionada}")
+        
+        correcoes = ref_correcoes.get() or {}
+        
+        # Aplica filtro de texto
+        if termo_busca:
+            correcoes = {
+                k: v for k, v in correcoes.items() 
+                if termo_busca.lower() in v.get("pergunta", "").lower() 
+                or termo_busca.lower() in v.get("resposta_revisada", "").lower()
+            }
+        
+        if not correcoes:
+            st.info("Nenhuma correção encontrada com esses filtros")
+            return
+        
+        # Mostra as correções
+        for correcao_id, dados in correcoes.items():
+            with st.expander(f"Correção {correcao_id[:6]}... - {dados.get('categoria', '')}"):
+                col1, col2 = st.columns([4, 1])
+
+                with col1:
+                    st.markdown(f"""
+                    **📅 Data:** {dados.get('timestamp', '')}  
+                    **👤 Revisor:** {dados.get('revisor', '')}  
+                    **🏷️ Categoria:** {dados.get('categoria', '')}  
+        
+                    **❓ Pergunta Original:**  
+                    {dados.get('pergunta', '')}
+        
+                    **📝 Resposta Revisada:**  
+                    {dados.get('resposta_revisada', '')}
+        
+                    **📊 Estatísticas:**  
+                    🔢 Vezes usada: {dados.get('uso_count', 0)}  
+                    ⏱️ Último uso: {dados.get('last_used', 'Nunca')}  
+                    ✅ Status: {dados.get('status', 'ativo')}
+                    """)
+    
+                with col2:
+                    if st.button(f"🗑️ Excluir", key=f"del_{correcao_id}"):
+                        if st.checkbox(f"Confirmar exclusão da correção {correcao_id[:6]}...?", key=f"confirm_del_{correcao_id}"):
+                            # Remove de todos os lugares
+                            db.reference(f"respostas_revisadas/por_categoria/{dados['categoria']}/{correcao_id}").delete()
+                            db.reference(f"respostas_revisadas/todas_correcoes/{correcao_id}").delete()
+                            st.success("Correção excluída!")
+                            st.rerun()
+        
+                    # Adicione botão para desativar/reativar
+                    if dados.get("status") == "ativo":
+                        if st.button("🚫 Desativar", key=f"disable_{correcao_id}"):
+                            db.reference(f"respostas_revisadas/todas_correcoes/{correcao_id}").update({"status": "inativo"})
+                            db.reference(f"respostas_revisadas/por_categoria/{dados['categoria']}/{correcao_id}").update({"status": "inativo"})
+                            st.success("Correção desativada!")
+                            st.rerun()
+                   else:
+                        if st.button("✅ Reativar", key=f"enable_{correcao_id}"):
+                            db.reference(f"respostas_revisadas/todas_correcoes/{correcao_id}").update({"status": "ativo"})
+                            db.reference(f"respostas_revisadas/por_categoria/{dados['categoria']}/{correcao_id}").update({"status": "ativo"})
+                            st.success("Correção reativada!")
+                            st.rerun()
+        
+                    if st.button(f"✏️ Editar", key=f"edit_{correcao_id}"):
+                        st.session_state['editando_correcao'] = dados
+                        st.session_state['editando_correcao_id'] = correcao_id
+                
+                
+                # Edição (se clicou em editar)
+                if st.session_state.get('editando_correcao_id') == correcao_id:
+                    with st.form(key=f"form_edit_{correcao_id}"):
+                        nova_resposta = st.text_area(
+                            "Resposta revisada:",
+                            value=dados.get('resposta_revisada', ''),
+                            key=f"edit_resposta_{correcao_id}"
+                        )
+                        
+                        nova_categoria = st.selectbox(
+                            "Categoria:",
+                            categorias,
+                            index=categorias.index(dados['categoria']) if dados['categoria'] in categorias else 0,
+                            key=f"edit_cat_{correcao_id}"
+                        )
+                        
+                        if st.form_submit_button("💾 Salvar Alterações"):
+                            if nova_resposta:
+                                # Atualiza a correção
+                                dados_atualizados = {
+                                    **dados,
+                                    "resposta_revisada": nova_resposta,
+                                    "categoria": nova_categoria,
+                                    "timestamp": datetime.now().isoformat()
+                                }
+                                
+                                # Remove da categoria antiga (se mudou)
+                                if nova_categoria != dados['categoria']:
+                                    db.reference(f"respostas_revisadas/por_categoria/{dados['categoria']}/{correcao_id}").delete()
+                                
+                                # Salva nas novas referências
+                                db.reference(f"respostas_revisadas/por_categoria/{nova_categoria}/{correcao_id}").set(dados_atualizados)
+                                db.reference(f"respostas_revisadas/todas_correcoes/{correcao_id}").set(dados_atualizados)
+                                
+                                st.success("✅ Correção atualizada!")
+                                st.session_state.pop('editando_correcao', None)
+                                st.session_state.pop('editando_correcao_id', None)
+                                st.rerun()
+                            else:
+                                st.warning("Digite uma resposta revisada")
+    
+    except Exception as e:
+        st.error(f"Erro ao carregar correções: {str(e)}")
 
 def carregar_respostas_revisadas():
     try:
@@ -435,11 +618,13 @@ def buscar_resposta_revisada(pergunta):
         return None
 
 def similaridade_pergunta(pergunta1, pergunta2):
-    """Função simplificada de similaridade - pode ser melhorada depois"""
-    palavras1 = set(pergunta1.lower().split())
-    palavras2 = set(pergunta2.lower().split())
-    intersecao = palavras1.intersection(palavras2)
-    return len(intersecao) / max(len(palavras1), len(palavras2), 1)
+    """Calcula similaridade entre perguntas usando SequenceMatcher"""
+    # Normaliza as perguntas
+    p1 = pergunta1.lower().strip()
+    p2 = pergunta2.lower().strip()
+    
+    # Usa SequenceMatcher para uma comparação mais inteligente
+    return SequenceMatcher(None, p1, p2).ratio()
 
 def carregar_interacoes():
     """Carrega todas as interações usuário-IA do Firebase"""
@@ -499,9 +684,13 @@ def carregar_memoria():
     try:
         ref = db.reference("memoria_global")
         memoria = ref.get()
+        if memoria is None:
+            st.warning("Nenhum dado encontrado na memória global")
+            return []
         return memoria if isinstance(memoria, list) else []
     except Exception as e:
         st.error(f"Erro ao carregar memória: {str(e)}")
+        st.error("Verifique a conexão com o Firebase e tente novamente")
         return []
 
 def salvar_memoria(mem):
@@ -609,8 +798,92 @@ def processar_comando_dev(comando, user_data):
     
     return None, None
 
+def calcular_similaridade(pergunta1, pergunta2):
+    """Calcula similaridade entre perguntas com lógica mais sofisticada"""
+    # Normaliza as perguntas
+    p1 = pergunta1.lower().strip()
+    p2 = pergunta2.lower().strip()
+    
+    # Caso sejam idênticas
+    if p1 == p2:
+        return 1.0
+    
+    # Verifica se uma contém a outra
+    if p1 in p2 or p2 in p1:
+        return 0.9
+    
+    # Lógica por palavras-chave
+    palavras_p1 = set(p1.split())
+    palavras_p2 = set(p2.split())
+    
+    # Calcula interseção
+    palavras_comuns = palavras_p1.intersection(palavras_p2)
+    total_palavras = max(len(palavras_p1), len(palavras_p2))
+    
+    return len(palavras_comuns) / total_palavras
+
+def buscar_correcao_efetiva(pergunta):
+    try:
+        # Busca em todas as correções ativas
+        ref = db.reference("respostas_revisadas/todas_correcoes")
+        todas_correcoes = ref.get() or {}
+        
+        melhor_correcao = None
+        melhor_pontuacao = 0
+        melhor_id = None
+        
+        for correcao_id, dados in todas_correcoes.items():
+            if dados.get("status") != "ativo":
+                continue
+                
+            # Calcula similaridade (pode melhorar com embeddings depois)
+            similaridade = calcular_similaridade(pergunta, dados.get("pergunta", ""))
+            
+            # Se for mais similar que o threshold e melhor que a anterior
+            if similaridade > 0.7 and similaridade > melhor_pontuacao:
+                melhor_pontuacao = similaridade
+                melhor_correcao = dados.get("resposta_revisada")
+                melhor_id = correcao_id
+        
+        # Atualiza estatísticas de uso
+        if melhor_id:
+            ref_correcao = db.reference(f"respostas_revisadas/todas_correcoes/{melhor_id}")
+            correcao_data = ref_correcao.get() or {}
+            
+            ref_correcao.update({
+                "uso_count": (correcao_data.get("uso_count", 0) + 1),
+                "last_used": datetime.now().isoformat()
+            })
+            
+            # Atualiza também na categoria
+            categoria = correcao_data.get("categoria")
+            if categoria:
+                db.reference(f"respostas_revisadas/por_categoria/{categoria}/{melhor_id}").update({
+                    "uso_count": (correcao_data.get("uso_count", 0) + 1),
+                    "last_used": datetime.now().isoformat()
+                })
+        
+        return melhor_correcao
+    
+    except Exception as e:
+        st.error(f"Erro ao buscar correções: {str(e)}")
+        return None
+    
+    except Exception as e:
+        st.error(f"Erro ao buscar correções: {str(e)}")
+        return None
+
 def gerar_resposta(memoria, prompt, user_name=None, historico_conversa=None):
-    # Verifica se há uma resposta revisada para essa pergunta
+    # Passo 1: Verifica se há uma correção revisada para esta pergunta
+    correcao = buscar_correcao_efetiva(prompt)
+    if correcao:
+        return correcao
+    
+    # Passo 2: Se não houver correção, usa a memória global
+    if memoria:
+        contexto_memoria = "\n".join(memoria)
+    else:
+        contexto_memoria = ""
     resposta_revisada = buscar_resposta_revisada(prompt)
     if resposta_revisada:
         return resposta_revisada
@@ -809,7 +1082,7 @@ def render_login_sidebar():
 
         menu_itens = ["Chat"]
         if int(st.session_state.get("user_data", {}).get("nivel", 0)) == -8:
-            menu_itens += ["Memória IA", "Feedbacks", "Treinar IA"]    # Adicione privilegios para dev
+            menu_itens += ["Memória IA", "Feedbacks", "Treinar IA", "Gerenciar Correções"]    # Adicione privilegios para dev
 
         choice = st.radio("Navegação", menu_itens, label_visibility="collapsed")
 
@@ -886,6 +1159,15 @@ def render_feedbacks():
         
         if filtro_usuario:
             todos_feedbacks = [f for f in todos_feedbacks if filtro_usuario.lower() in f.get('user_id', '').lower()]
+
+        # Após aplicar os filtros, adicione:
+        items_por_pagina = 10
+        pagina = st.sidebar.number_input('Página', min_value=1, max_value=(len(todos_feedbacks)//items_por_pagina + 1), value=1)
+        inicio = (pagina - 1) * items_por_pagina
+        fim = inicio + items_por_pagina
+
+        # Modifique o loop para mostrar os feedbacks:
+        for feedback in todos_feedbacks[inicio:fim]:
         
         # Mostra os feedbacks
         for feedback in todos_feedbacks[:50]:  # Limita a 50 mais recentes
@@ -1097,12 +1379,13 @@ def render_chat_interface():
 
             # Gera resposta da IA
             user_name = user_data.get("nome_usuario")
-            resposta = gerar_resposta(
-                st.session_state.get("memoria", []),
-                user_input,
-                user_name,
-                st.session_state.messages
-            )
+            with st.spinner("Gerando resposta..."):
+                resposta = gerar_resposta(
+                    st.session_state.get("memoria", []),
+                    user_input,
+                    user_name,
+                    st.session_state.messages
+                )
 
             # Adiciona resposta do bot
             st.session_state.messages.append({"sender": "bot", "text": resposta})
@@ -1121,45 +1404,7 @@ def render_chat_interface():
 
 
         
-        if submit_button and user_input:
-            # Verificar se é um comando de dev
-            user_data = st.session_state.get("user_data", {})
-            success, msg = processar_comando_dev(user_input, user_data)
-            
-            if success is not None:
-                if success:
-                    st.success(msg)
-                else:
-                    st.error(msg)
-                st.rerun()
-            
-            # Adiciona mensagem do usuário ao histórico
-            st.session_state.messages.append({"sender": "user", "text": user_input})
-            
-            # Gera resposta do bot
-            user_name = user_data.get("nome_usuario")
-            resposta = gerar_resposta(
-                st.session_state.get("memoria", []), 
-                user_input,
-                user_name,
-                st.session_state.messages  # Passa o histórico da conversa
-            )
-            
-            # Adiciona resposta do bot ao histórico
-            st.session_state.messages.append({"sender": "bot", "text": resposta})
-            
-            # Salva o chat atual no Firebase
-            if "current_chat_id" in st.session_state and "user_id" in st.session_state:
-                salvar_historico_chat(
-                    st.session_state.user_id,
-                    st.session_state.current_chat_id,
-                    st.session_state.messages
-                )
-            
-            # Rerun para atualizar a interface
-            st.rerun()
 
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Função para aplicar estilo dinâmico ---
 def aplicar_estilo_customizado():
@@ -1188,8 +1433,17 @@ def aplicar_estilo_customizado():
 
 # --- Função Principal ---
 def main():
+    try:
+        initialize_firebase()
+        # Testa a conexão
+        db.reference("test_connection").get()
+    except Exception as e:
+        st.error(f"Erro ao conectar ao Firebase: {str(e)}")
+        st.stop()
+        
     # Adicione temporariamente  para debug
     #st.write("Estrutura do Firebase:", db.reference("logs").get())
+    
     # Carregar configurações
     load_css()
     initialize_firebase()
@@ -1197,7 +1451,6 @@ def main():
 
     
     # Configurar chave da API
-    global OPENROUTER_KEY
     OPENROUTER_KEY = st.secrets["OPENROUTER_KEY"]
     openai.api_key = OPENROUTER_KEY
     openai.base_url = "https://openrouter.ai/api/v1"
