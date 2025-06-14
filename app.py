@@ -1188,8 +1188,8 @@ def aplicar_estilo_customizado():
 
 # --- Função Principal ---
 def main():
-    # Adicione temporariamente no main() para debug
-    st.write("Estrutura do Firebase:", db.reference("logs").get())
+    # Adicione temporariamente  para debug
+    #st.write("Estrutura do Firebase:", db.reference("logs").get())
     # Carregar configurações
     load_css()
     initialize_firebase()
