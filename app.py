@@ -342,6 +342,40 @@ def load_css():
         .st-emotion-cache-1v0mbdj {{
             margin: 0 auto;
         }}
+        /* Estilos para a interface de treinamento */
+        .st-correction-card {{
+        border: 1px solid #555 !important;
+        border-radius: 8px !important;
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+        background: #2a2a2a !important;
+        }}
+
+        .st-correction-question {{
+        font-weight: bold !important;
+        color: #4CAF50 !important;
+        margin-bottom: 5px !important;
+        }}
+
+        .st-correction-answer {{
+        background: #333333 !important;
+        padding: 10px !important;
+        border-radius: 5px !important;
+        margin: 10px 0 !important;
+        }}
+
+        .st-correction-buttons {{
+        display: flex !important;
+        justify-content: space-between !important;
+        margin-top: 10px !important;
+        }}
+
+        .st-correction-form {{
+        margin-top: 15px !important;
+        padding: 10px !important;
+        background: #333333 !important;
+        border-radius: 5px !important;
+        }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -358,6 +392,54 @@ def initialize_firebase():
         firebase_admin.initialize_app(cred, {
             "databaseURL": st.secrets["FIREBASE_KEY_DB_URL"]
         })
+
+
+# --- Novas funções para o sistema RAG-like ---
+def salvar_resposta_revisada(user_id, pergunta, resposta_original, resposta_revisada, categoria):
+    try:
+        ref = db.reference(f"respostas_revisadas/{user_id}")
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        resposta_data = {
+            "pergunta": pergunta,
+            "resposta_original": resposta_original,
+            "resposta_revisada": resposta_revisada,
+            "categoria": categoria,
+            "revisado_por": st.session_state.user_data.get("nome_usuario", "admin"),
+            "timestamp": datetime.now().isoformat(),
+            "status": "revisado"
+        }
+        ref.child(ts).set(resposta_data)
+        return True
+    except Exception as e:
+        st.error(f"Erro ao salvar resposta revisada: {str(e)}")
+        return False
+
+def carregar_respostas_revisadas():
+    try:
+        ref = db.reference("respostas_revisadas")
+        return ref.get() or {}
+    except Exception as e:
+        st.error(f"Erro ao carregar respostas revisadas: {str(e)}")
+        return {}
+
+def buscar_resposta_revisada(pergunta):
+    try:
+        respostas = carregar_respostas_revisadas()
+        for user_id, user_respostas in respostas.items():
+            for ts, resposta in user_respostas.items():
+                if resposta['status'] == 'revisado' and similaridade_pergunta(pergunta, resposta['pergunta']) > 0.7:
+                    return resposta['resposta_revisada']
+        return None
+    except Exception as e:
+        st.error(f"Erro ao buscar resposta revisada: {str(e)}")
+        return None
+
+def similaridade_pergunta(pergunta1, pergunta2):
+    """Função simplificada de similaridade - pode ser melhorada depois"""
+    palavras1 = set(pergunta1.lower().split())
+    palavras2 = set(pergunta2.lower().split())
+    intersecao = palavras1.intersection(palavras2)
+    return len(intersecao) / max(len(palavras1), len(palavras2), 1)
 
 
 # --- Funções Auxiliares ---
@@ -476,6 +558,10 @@ def processar_comando_dev(comando, user_data):
     return None, None
 
 def gerar_resposta(memoria, prompt, user_name=None, historico_conversa=None):
+    # Verifica se há uma resposta revisada para essa pergunta
+    resposta_revisada = buscar_resposta_revisada(prompt)
+    if resposta_revisada:
+        return resposta_revisada
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
     
     # Construir contexto da conversa
@@ -671,7 +757,7 @@ def render_login_sidebar():
 
         menu_itens = ["Chat"]
         if int(st.session_state.get("user_data", {}).get("nivel", 0)) == -8:
-            menu_itens += ["Memória IA", "Feedbacks"]
+            menu_itens += ["Memória IA", "Feedbacks", "Treinar IA"]    # Adicione privilegios para dev
 
         choice = st.radio("Navegação", menu_itens, label_visibility="collapsed")
 
@@ -736,6 +822,136 @@ def render_feedbacks():
                     st.divider()
     except Exception as e:
         st.error(f"Erro ao carregar feedbacks: {str(e)}")
+
+def render_treinar_ia():
+    st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
+    st.subheader("📚 Treinar IA - Revisão de Respostas")
+    
+    # Carrega todo o histórico de mensagens
+    try:
+        ref = db.reference("logs/usuarios")
+        todos_usuarios = ref.get() or {}
+        
+        # Coleta todas as interações de todos os usuários
+        todas_interacoes = []
+        for user_id, user_data in todos_usuarios.items():
+            if "chats" in user_data:
+                for chat_id, chat_data in user_data["chats"].items():
+                    mensagens = chat_data.get("mensagens", [])
+                    for i in range(0, len(mensagens)-1, 2):
+                        if i+1 < len(mensagens) and mensagens[i]["sender"] == "user" and mensagens[i+1]["sender"] == "bot":
+                            todas_interacoes.append({
+                                "user": user_id,
+                                "chat": chat_id,
+                                "pergunta": mensagens[i]["text"],
+                                "resposta": mensagens[i+1]["text"],
+                                "timestamp": chat_data.get("ultima_atualizacao", "")
+                            })
+        
+        # Mostra as interações em cards
+        for idx, interacao in enumerate(todas_interacoes[:50]):  # Limita a 50 mais recentes
+            with st.container():
+                st.markdown(f"""
+                <div style='border: 1px solid #555; border-radius: 8px; padding: 15px; margin-bottom: 15px;'>
+                    <div style='font-weight: bold; color: {COR_PRIMARIA};'>Usuário: {interacao['user']}</div>
+                    <div style='color: #aaa; font-size: 0.8em;'>{interacao['timestamp']}</div>
+                    
+                    <div style='margin: 10px 0; padding: 10px; background: #333; border-radius: 5px;'>
+                        <div style='font-weight: bold;'>❓ Pergunta:</div>
+                        <div>{interacao['pergunta']}</div>
+                    </div>
+                    
+                    <div style='margin: 10px 0; padding: 10px; background: #334; border-radius: 5px;'>
+                        <div style='font-weight: bold;'>🤖 Resposta Original:</div>
+                        <div>{interacao['resposta']}</div>
+                    </div>
+                    
+                    <div style='display: flex; justify-content: space-between; margin-top: 10px;'>
+                        <button onclick='approveResponse({idx})' style='background: #00aa00; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;'>✔ Aprovada</button>
+                        <button onclick='showCorrectionForm({idx})' style='background: #aa0000; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;'>❌ Corrigir</button>
+                    </div>
+                    
+                    <div id='correction-form-{idx}' style='display: none; margin-top: 10px;'>
+                        <textarea id='corrected-answer-{idx}' style='width: 100%; height: 100px; background: #333; color: white; border: 1px solid #555; padding: 8px;' placeholder='Digite a resposta corrigida...'></textarea>
+                        <select id='category-{idx}' style='width: 100%; margin: 5px 0; background: #333; color: white; border: 1px solid #555; padding: 5px;'>
+                            <option value='geral'>Geral</option>
+                            <option value='produtos'>Produtos</option>
+                            <option value='contas'>Contas</option>
+                            <option value='investimentos'>Investimentos</option>
+                            <option value='cartoes'>Cartões</option>
+                        </select>
+                        <button onclick='submitCorrection({idx})' style='background: {COR_PRIMARIA}; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;'>Enviar Correção</button>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Adicione os callbacks JavaScript
+                components.html(f"""
+                <script>
+                    function showCorrectionForm(idx) {{
+                        document.getElementById('correction-form-'+idx).style.display = 'block';
+                    }}
+                    
+                    function submitCorrection(idx) {{
+                        const correctedAnswer = document.getElementById('corrected-answer-'+idx).value;
+                        const category = document.getElementById('category-'+idx).value;
+                        
+                        // Envia para o Streamlit
+                        window.parent.postMessage({{
+                            type: 'submitCorrection',
+                            idx: idx,
+                            correctedAnswer: correctedAnswer,
+                            category: category,
+                            pergunta: `{interacao['pergunta']}`,
+                            respostaOriginal: `{interacao['resposta']}`
+                        }}, '*');
+                    }}
+                    
+                    function approveResponse(idx) {{
+                        window.parent.postMessage({{
+                            type: 'approveResponse',
+                            idx: idx,
+                            pergunta: `{interacao['pergunta']}`,
+                            respostaOriginal: `{interacao['resposta']}`
+                        }}, '*');
+                    }}
+                </script>
+                """, height=0)
+                
+        # Listener para os eventos JavaScript
+        correction_data = components.html("""
+        <script>
+            window.correctionData = {};
+            window.addEventListener('message', (event) => {
+                if (event.data.type === 'submitCorrection' || event.data.type === 'approveResponse') {
+                    window.correctionData = event.data;
+                    window.parent.document.querySelector('iframe').contentWindow.document.querySelector('button').click();
+                }
+            });
+        </script>
+        <button onclick='window.dummy=1' style='display:none;'></button>
+        """, height=0)
+        
+        # Processa as correções enviadas
+        if hasattr(correction_data, 'type'):
+            if correction_data.type == 'submitCorrection':
+                if salvar_resposta_revisada(
+                    st.session_state.user_id,
+                    correction_data.pergunta,
+                    correction_data.respostaOriginal,
+                    correction_data.correctedAnswer,
+                    correction_data.category
+                ):
+                    st.success("✅ Resposta revisada salva com sucesso! Esta resposta será usada para perguntas similares no futuro.")
+                else:
+                    st.error("❌ Erro ao salvar a resposta revisada.")
+            
+            elif correction_data.type == 'approveResponse':
+                st.success("✔ Resposta marcada como correta. Nenhuma ação adicional necessária.")
+                
+    except Exception as e:
+        st.error(f"Erro ao carregar interações: {str(e)}")
+
 
 def compensar_header_fixo():
     st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
@@ -986,6 +1202,9 @@ def main():
         render_memoria_ia()
     elif choice == "Feedbacks" and st.session_state.get("user_data", {}).get("nivel") == -8:
         render_feedbacks()
+    elif choice == "Treinar IA" and st.session_state.get("user_data", {}).get("nivel") == -8:
+        render_treinar_ia()
+        
         aplicar_estilo_customizado()
 
         # Mostra aviso se for visitante
