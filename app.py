@@ -1446,6 +1446,7 @@ def main():
 
     
     # Configurar chave da API
+    global OPENROUTER_KEY
     OPENROUTER_KEY = st.secrets["OPENROUTER_KEY"]
     openai.api_key = OPENROUTER_KEY
     openai.base_url = "https://openrouter.ai/api/v1"
